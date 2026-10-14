@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №6</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №6</h1>
+            <h2>Дисциплина: Web-программирование</h2>
+            <h2>Тема: Формы и CRUD на PHP и MySQL</h2>
+            <hr />
+            <h2>Цель работы</h2>
+            <p>
+                Дополнить сайт из лабораторной №4 страницей управления новостями: создавать,
+                просматривать, редактировать и удалять записи. Научиться проверять ввод,
+                использовать параметры PDO и сохранять введённые значения при ошибках.
+            </p>
+            <h2>Необходимые инструменты</h2>
+            <ul>
+                <li>
+                    Локальный сервер с PHP 8 и MySQL; расширения PHP <code>pdo_mysql</code> и
+                    <code>mbstring</code>.
+                </li>
+                <li>Редактор кода и браузер.</li>
+                <li>База <code>site</code> с таблицей <code>news</code> из лабораторной №4.</li>
+            </ul>
+            <p>
+                Работа предназначена для локального учебного сайта. Страница не содержит входа
+                пользователя и разграничения прав. Не размещайте её в открытом доступе как готовую
+                административную панель.
+            </p>
+            <h2>Задание 1. Подготовить проект</h2>
+            <h3>Шаг 1.1 — проверить таблицу</h3>
+            <p>
+                Сохраните копию учебной базы перед экспериментами. Если таблица
+                <code>news</code> уже существует, используйте её. Если начинаете заново, создайте
+                базу <code>site</code> в phpMyAdmin, выберите её и выполните:
+            </p>
+            <pre><code class="language-sql">CREATE TABLE IF NOT EXISTS news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+</code></pre>
+            <p>
+                <code>IF NOT EXISTS</code> не изменяет структуру существующей таблицы. Проверьте
+                наличие всех четырёх полей вручную.
+            </p>
+            <h3>Шаг 1.2 — подключить базу</h3>
+            <p>
+                Используйте рабочий <code>config.php</code> из лабораторной №4. При создании проекта
+                с нуля поместите в него:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$pdo = new PDO(
+    &#39;mysql:host=localhost;dbname=site;charset=utf8mb4&#39;,
+    &#39;root&#39;,
+    &#39;&#39;,
+    [
+        PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES =&gt; false,
+    ]
+);
+</code></pre>
+            <p>
+                Укажите свои хост, имя пользователя и пароль MySQL. Пустой пароль здесь — пример
+                локальной настройки, а не обязательное значение. Не добавляйте закрывающий
+                <code>?&gt;</code> в этот файл: случайный вывод после него помешает отправке
+                HTTP-заголовков.
+            </p>
+            <h2>Задание 2. Написать обработчик</h2>
+            <h3>Шаг 2.1 — создать admin.php</h3>
+            <p>
+                Следующие три фрагмента относятся к
+                <strong>одному файлу <code>admin.php</code></strong
+                >. Добавляйте их подряд. Первый фрагмент подключает базу, объявляет вспомогательные
+                функции и готовит состояние формы:
+            </p>
+            <pre><code class="language-php">&lt;?php
+require __DIR__ . &#39;/config.php&#39;;
+
+function e(string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, &#39;UTF-8&#39;);
+}
+function positiveId($value): int {
+    return (int) filter_var($value, FILTER_VALIDATE_INT,
+        [&#39;options&#39; =&gt; [&#39;min_range&#39; =&gt; 1]]);
+}
+function findNews(PDO $pdo, int $id) {
+    $stmt = $pdo-&gt;prepare(&#39;SELECT id, title, content FROM news WHERE id = ?&#39;);
+    $stmt-&gt;execute([$id]);
+    return $stmt-&gt;fetch(PDO::FETCH_ASSOC);
+}
+
+$errors = [];
+$id = 0;
+$title = &#39;&#39;;
+$content = &#39;&#39;;
+$editing = false;
+</code></pre>
+            <p>
+                <code>__DIR__</code> обозначает папку текущего файла.
+                <code>positiveId()</code> возвращает 0 при неправильном идентификаторе. Переменная
+                <code>$editing</code> определяет, создаёт форма новость или редактирует
+                существующую.
+            </p>
+            <h3>Шаг 2.2 — обработать POST и открытие формы</h3>
+            <p>Добавьте ниже, не открывая PHP повторно:</p>
+            <pre><code class="language-php">if ($_SERVER[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {
+    $action = is_string($_POST[&#39;action&#39;] ?? null) ? $_POST[&#39;action&#39;] : &#39;&#39;;
+    $id = positiveId($_POST[&#39;id&#39;] ?? null);
+    $title = is_string($_POST[&#39;title&#39;] ?? null) ? trim($_POST[&#39;title&#39;]) : &#39;&#39;;
+    $content = is_string($_POST[&#39;content&#39;] ?? null) ? trim($_POST[&#39;content&#39;]) : &#39;&#39;;
+    $editing = $action === &#39;update&#39;;
+
+    if (!in_array($action, [&#39;create&#39;, &#39;update&#39;, &#39;delete&#39;], true)) {
+        $errors[] = &#39;Неизвестная операция.&#39;;
+    } elseif ($action !== &#39;create&#39; &amp;&amp; ($id === 0 || !findNews($pdo, $id))) {
+        http_response_code(404);
+        $errors[] = &#39;Новость не найдена. Вернитесь к списку.&#39;;
+    }
+    if (in_array($action, [&#39;create&#39;, &#39;update&#39;], true)) {
+        if ($title === &#39;&#39; || mb_strlen($title, &#39;UTF-8&#39;) &gt; 255) {
+            $errors[] = &#39;Заголовок должен содержать от 1 до 255 символов.&#39;;
+        }
+        if ($content === &#39;&#39; || mb_strlen($content, &#39;UTF-8&#39;) &gt; 10000) {
+            $errors[] = &#39;Текст должен содержать от 1 до 10000 символов.&#39;;
+        }
+    }
+
+    if (!$errors) {
+        if ($action === &#39;create&#39;) {
+            $stmt = $pdo-&gt;prepare(&#39;INSERT INTO news (title, content) VALUES (?, ?)&#39;);
+            $stmt-&gt;execute([$title, $content]);
+        } elseif ($action === &#39;update&#39;) {
+            $stmt = $pdo-&gt;prepare(&#39;UPDATE news SET title = ?, content = ? WHERE id = ?&#39;);
+            $stmt-&gt;execute([$title, $content, $id]);
+        } else {
+            $stmt = $pdo-&gt;prepare(&#39;DELETE FROM news WHERE id = ?&#39;);
+            $stmt-&gt;execute([$id]);
+        }
+        header(&#39;Location: admin.php&#39;, true, 303);
+        exit;
+    }
+} elseif (isset($_GET[&#39;edit&#39;])) {
+    $id = positiveId($_GET[&#39;edit&#39;]);
+    $item = $id &gt; 0 ? findNews($pdo, $id) : false;
+    if (!$item) {
+        http_response_code(404);
+        $errors[] = &#39;Новость не найдена.&#39;;
+    } else {
+        $editing = true;
+        $title = $item[&#39;title&#39;];
+        $content = $item[&#39;content&#39;];
+    }
+}
+
+$news = $pdo-&gt;query(&#39;SELECT id, title, content FROM news ORDER BY id DESC&#39;)
+    -&gt;fetchAll(PDO::FETCH_ASSOC);
+?&gt;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> обработчик сначала проверяет операцию,
+                идентификатор и текст. Только если массив ошибок пуст, он изменяет базу. После
+                успеха браузер получает перенаправление 303. При ошибке значения остаются в
+                переменных и снова попадают в форму.
+            </p>
+            <p>
+                Ограничение текста в 10000 символов — правило нашего приложения. Сортировка по
+                <code>id DESC</code> располагает последние добавленные записи сверху.
+            </p>
+            <h3>Шаг 2.3 — добавить HTML</h3>
+            <p>Продолжите тот же файл после закрывающего <code>?&gt;</code>:</p>
+            <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Управление новостями&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Управление новостями&lt;/h1&gt;
+&lt;?php foreach ($errors as $error): ?&gt;
+    &lt;p role=&quot;alert&quot;&gt;&lt;?= e($error) ?&gt;&lt;/p&gt;
+&lt;?php endforeach; ?&gt;
+
+&lt;h2&gt;&lt;?= $editing ? &#39;Редактирование&#39; : &#39;Добавление&#39; ?&gt;&lt;/h2&gt;
+&lt;form method=&quot;post&quot; action=&quot;admin.php&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;action&quot; value=&quot;&lt;?= $editing ? &#39;update&#39; : &#39;create&#39; ?&gt;&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;&lt;?= $id ?&gt;&quot;&gt;
+    &lt;p&gt;&lt;label&gt;Заголовок
+        &lt;input name=&quot;title&quot; maxlength=&quot;255&quot; required value=&quot;&lt;?= e($title) ?&gt;&quot;&gt;
+    &lt;/label&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Текст
+        &lt;textarea name=&quot;content&quot; maxlength=&quot;10000&quot; required&gt;&lt;?= e($content) ?&gt;&lt;/textarea&gt;
+    &lt;/label&gt;&lt;/p&gt;
+    &lt;button type=&quot;submit&quot;&gt;Сохранить&lt;/button&gt;
+    &lt;a href=&quot;admin.php&quot;&gt;К новой записи&lt;/a&gt;
+&lt;/form&gt;
+
+&lt;h2&gt;Все новости&lt;/h2&gt;
+&lt;?php if (!$news): ?&gt;
+    &lt;p&gt;Новостей пока нет.&lt;/p&gt;
+&lt;?php endif; ?&gt;
+&lt;?php foreach ($news as $item): ?&gt;
+    &lt;article&gt;
+        &lt;h3&gt;&lt;?= e($item[&#39;title&#39;]) ?&gt;&lt;/h3&gt;
+        &lt;p&gt;&lt;?= nl2br(e($item[&#39;content&#39;])) ?&gt;&lt;/p&gt;
+        &lt;a href=&quot;admin.php?edit=&lt;?= (int) $item[&#39;id&#39;] ?&gt;&quot;&gt;Редактировать&lt;/a&gt;
+        &lt;form method=&quot;post&quot; action=&quot;admin.php&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;action&quot; value=&quot;delete&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;&lt;?= (int) $item[&#39;id&#39;] ?&gt;&quot;&gt;
+            &lt;button type=&quot;submit&quot;&gt;Удалить&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/article&gt;
+&lt;?php endforeach; ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> одна форма обслуживает добавление и редактирование.
+                Для удаления у каждой новости своя форма. <code>nl2br()</code> превращает переносы
+                строк в HTML-переносы после экранирования текста.
+            </p>
+            <h2>Задание 3. Проверить полный цикл</h2>
+            <p>
+                Откройте <code>admin.php</code> через адрес своего локального сайта, например
+                <code>http://site.local/admin.php</code>. Имя домена зависит от настройки вашего
+                сервера.
+            </p>
+            <ol>
+                <li>
+                    Добавьте две новости. Проверьте их появление и в браузере, и в таблице MySQL.
+                </li>
+                <li>Измените заголовок первой новости. Убедитесь, что вторая не изменилась.</li>
+                <li>Сохраните новость без изменений: это допустимая операция.</li>
+                <li>Удалите одну новость. Убедитесь, что удалена только выбранная строка.</li>
+                <li>Обновите страницу после добавления: дубликат не должен появиться.</li>
+                <li>
+                    Отправьте заголовок из пробелов. Ожидайте сообщение об ошибке и сохранение
+                    введённого текста.
+                </li>
+                <li>
+                    Введите заголовок <code>&lt;b&gt;Проверка&lt;/b&gt;</code> и кавычки. Они должны
+                    отобразиться как текст, без жирного начертания от тега.
+                </li>
+                <li>
+                    Откройте <code>admin.php?edit=999999</code>, выбрав заведомо отсутствующий id.
+                    Ожидайте сообщение и HTTP 404 во вкладке Network.
+                </li>
+            </ol>
+            <h2>Задание 4. Самостоятельная работа</h2>
+            <ol>
+                <li>Добавьте отображение даты <code>created_at</code> в списке.</li>
+                <li>
+                    Добавьте подтверждение удаления средствами JavaScript. Отмена должна
+                    предотвращать отправку формы, а само удаление по-прежнему должно выполняться
+                    через POST.
+                </li>
+                <li>
+                    Добавьте сообщение об успешном сохранении после перенаправления. Для параметра
+                    URL используйте заранее определённый текст сообщения, а не прямой вывод
+                    произвольного значения.
+                </li>
+            </ol>
+            <h2>Что сдать</h2>
+            <ul>
+                <li>
+                    Файлы <code>config.php</code> и <code>admin.php</code> без реальных секретов от
+                    внешних сервисов.
+                </li>
+                <li>SQL-структуру таблицы и несколько учебных записей.</li>
+                <li>Скриншоты списка, заполненной формы редактирования и ошибки проверки.</li>
+                <li>
+                    Результаты восьми проверок из задания 3: действие, ожидаемый и фактический
+                    результат.
+                </li>
+            </ul>
+            <h2>Критерии выполнения</h2>
+            <p>
+                Работа выполнена, если действуют все четыре операции CRUD, запросы используют
+                параметры, ввод проверяется сервером, вывод экранируется, ошибочная форма сохраняет
+                значения, а обновление страницы после POST не создаёт дубликат.
+            </p>
+            <h2>Контрольные вопросы</h2>
+            <ol>
+                <li>Как PHP различает добавление и редактирование?</li>
+                <li>Почему значение скрытого <code>id</code> тоже проверяется?</li>
+                <li>Когда вызываются <code>prepare()</code> и <code>execute()</code>?</li>
+                <li>Почему <code>header()</code> находится выше HTML?</li>
+                <li>
+                    Какие средства защиты понадобятся перед публикацией административной страницы?
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №7</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №7</h1>
+            <h2>Дисциплина: Web-программирование</h2>
+            <h2>Тема: JavaScript, fetch и PHP API</h2>
+            <hr />
+            <h2>Цель работы</h2>
+            <p>
+                Создать интерфейс загрузки, добавления и удаления новостей без перезагрузки
+                страницы. Научиться передавать JSON, проверять HTTP-ответы, обновлять DOM и
+                показывать пользователю состояние операции.
+            </p>
+            <h2>Необходимые инструменты</h2>
+            <p>
+                Используйте локальный сайт, базу <code>site</code>, таблицу <code>news</code> и
+                <code>config.php</code> из лабораторной №6. Нужны PHP 8 с <code>pdo_mysql</code> и
+                <code>mbstring</code>, MySQL, редактор и браузер с вкладками Console и Network. Если
+                пропустили работу №6, сначала выполните её задание 1.
+            </p>
+            <p>
+                Оставьте <code>admin.php</code> как рабочую версию обычных форм. Рядом создайте три
+                новых файла: <code>api-news.php</code>, <code>news-app.html</code>,
+                <code>news-app.js</code>. Учебный API не содержит аутентификации и рассчитан на
+                локальную работу.
+            </p>
+            <h2>Задание 1. Создать API</h2>
+            <h3>Шаг 1.1 — определить формат ответа</h3>
+            <p>
+                В <code>api-news.php</code> поместите следующий код. Файл должен начинаться с
+                <code>&lt;?php</code>, без вывода HTML и без закрывающего PHP-тега.
+            </p>
+            <pre><code class="language-php">&lt;?php
+ini_set(&#39;display_errors&#39;, &#39;0&#39;);
+header(&#39;Content-Type: application/json; charset=utf-8&#39;);
+
+function reply(array $data, int $status = 200): void {
+    http_response_code($status);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    exit;
+}
+
+try {
+    require __DIR__ . &#39;/config.php&#39;;
+    $method = $_SERVER[&#39;REQUEST_METHOD&#39;];
+    if ($method === &#39;GET&#39;) {
+        $news = $pdo-&gt;query(&#39;SELECT id, title, content FROM news ORDER BY id DESC&#39;)
+            -&gt;fetchAll(PDO::FETCH_ASSOC);
+        reply([&#39;news&#39; =&gt; $news]);
+    }
+    if ($method !== &#39;POST&#39;) {
+        header(&#39;Allow: GET, POST&#39;);
+        reply([&#39;error&#39; =&gt; &#39;Метод не поддерживается.&#39;], 405);
+    }
+    $type = strtolower(trim(explode(&#39;;&#39;, $_SERVER[&#39;CONTENT_TYPE&#39;] ?? &#39;&#39;)[0]));
+    if ($type !== &#39;application/json&#39;) {
+        reply([&#39;error&#39; =&gt; &#39;Ожидается application/json.&#39;], 415);
+    }
+    try {
+        $data = json_decode(file_get_contents(&#39;php://input&#39;), true, 512, JSON_THROW_ON_ERROR);
+    } catch (JsonException $e) {
+        reply([&#39;error&#39; =&gt; &#39;Некорректный JSON.&#39;], 400);
+    }
+    if (!is_array($data) || !isset($data[&#39;action&#39;]) || !is_string($data[&#39;action&#39;])) {
+        reply([&#39;error&#39; =&gt; &#39;Укажите операцию action.&#39;], 400);
+    }
+
+    if ($data[&#39;action&#39;] === &#39;create&#39;) {
+        $title = is_string($data[&#39;title&#39;] ?? null) ? trim($data[&#39;title&#39;]) : &#39;&#39;;
+        $content = is_string($data[&#39;content&#39;] ?? null) ? trim($data[&#39;content&#39;]) : &#39;&#39;;
+        if ($title === &#39;&#39; || mb_strlen($title, &#39;UTF-8&#39;) &gt; 255 ||
+            $content === &#39;&#39; || mb_strlen($content, &#39;UTF-8&#39;) &gt; 10000) {
+            reply([&#39;error&#39; =&gt; &#39;Введите заголовок (1–255 символов) и текст (1–10000).&#39;], 422);
+        }
+        $stmt = $pdo-&gt;prepare(&#39;INSERT INTO news (title, content) VALUES (?, ?)&#39;);
+        $stmt-&gt;execute([$title, $content]);
+        reply([&#39;item&#39; =&gt; [
+            &#39;id&#39; =&gt; (int) $pdo-&gt;lastInsertId(),
+            &#39;title&#39; =&gt; $title,
+            &#39;content&#39; =&gt; $content,
+        ]], 201);
+    }
+    if ($data[&#39;action&#39;] === &#39;delete&#39;) {
+        $id = filter_var($data[&#39;id&#39;] ?? null, FILTER_VALIDATE_INT,
+            [&#39;options&#39; =&gt; [&#39;min_range&#39; =&gt; 1]]);
+        if (!$id) {
+            reply([&#39;error&#39; =&gt; &#39;Некорректный идентификатор.&#39;], 422);
+        }
+        $stmt = $pdo-&gt;prepare(&#39;DELETE FROM news WHERE id = ?&#39;);
+        $stmt-&gt;execute([$id]);
+        if ($stmt-&gt;rowCount() === 0) {
+            reply([&#39;error&#39; =&gt; &#39;Новость не найдена. Обновите список.&#39;], 404);
+        }
+        reply([&#39;deleted&#39; =&gt; $id]);
+    }
+    reply([&#39;error&#39; =&gt; &#39;Неизвестная операция.&#39;], 400);
+} catch (Throwable $e) {
+    error_log((string) $e);
+    reply([&#39;error&#39; =&gt; &#39;Ошибка сервера. Проверьте журнал PHP.&#39;], 500);
+}
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> GET читает новости; POST выбирает операцию по
+                <code>action</code>. Ответы формируются одной функцией <code>reply()</code>. Ошибки
+                базы записываются в журнал сервера, клиент получает JSON с общим сообщением. Для
+                удаления нулевой <code>rowCount()</code> означает, что ни одна запись не была
+                удалена.
+            </p>
+            <h3>Шаг 1.2 — проверить чтение</h3>
+            <p>
+                Откройте <code>api-news.php</code> через локальный сервер. Ожидайте объект с
+                массивом <code>news</code>; для пустой таблицы — <code>{&quot;news&quot;:[]}</code>.
+                Если видите 500, сначала проверьте подключение и журнал PHP.
+            </p>
+            <h2>Задание 2. Подготовить страницу</h2>
+            <p>Создайте <code>news-app.html</code>:</p>
+            <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Новости без перезагрузки&lt;/title&gt;
+    &lt;script src=&quot;news-app.js&quot; defer&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Новости&lt;/h1&gt;
+&lt;form id=&quot;news-form&quot;&gt;
+    &lt;p&gt;&lt;label&gt;Заголовок &lt;input name=&quot;title&quot; maxlength=&quot;255&quot; required&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Текст &lt;textarea name=&quot;content&quot; maxlength=&quot;10000&quot; required&gt;&lt;/textarea&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;button type=&quot;submit&quot;&gt;Добавить&lt;/button&gt;
+&lt;/form&gt;
+&lt;p id=&quot;message&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;&lt;/p&gt;
+&lt;button id=&quot;reload&quot; type=&quot;button&quot;&gt;Обновить список&lt;/button&gt;
+&lt;ul id=&quot;news-list&quot;&gt;&lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                <code>defer</code> откладывает выполнение скрипта до разбора HTML. Область
+                <code>role=&quot;status&quot;</code> сообщает об изменении состояния, в том числе
+                пользователям программ экранного доступа.
+            </p>
+            <h2>Задание 3. Написать JavaScript</h2>
+            <p>
+                Следующие три фрагмента добавляйте <strong>подряд в <code>news-app.js</code></strong
+                >.
+            </p>
+            <h3>Шаг 3.1 — состояние и запросы</h3>
+            <pre><code class="language-javascript">const form = document.querySelector(&#39;#news-form&#39;);
+const list = document.querySelector(&#39;#news-list&#39;);
+const message = document.querySelector(&#39;#message&#39;);
+const reload = document.querySelector(&#39;#reload&#39;);
+let news = [];
+let busy = false;
+
+function setBusy(value) {
+    busy = value;
+    document.querySelectorAll(&#39;button&#39;).forEach(button =&gt; {
+        button.disabled = value;
+    });
+    form.querySelectorAll(&#39;input, textarea&#39;).forEach(field =&gt; {
+        field.disabled = value;
+    });
+    list.setAttribute(&#39;aria-busy&#39;, String(value));
+}
+
+async function request(payload) {
+    const options = payload === undefined ? {} : {
+        method: &#39;POST&#39;,
+        headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+        body: JSON.stringify(payload)
+    };
+    let response;
+    try {
+        response = await fetch(&#39;api-news.php&#39;, options);
+    } catch {
+        throw new Error(&#39;Нет связи с сервером. Перед повтором обновите список.&#39;);
+    }
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error(&#39;Сервер вернул не JSON. Проверьте ответ во вкладке Network.&#39;);
+    }
+    if (!response.ok) {
+        throw new Error(data.error || `Ошибка HTTP ${response.status}`);
+    }
+    return data;
+}
+
+async function run(task) {
+    if (busy) return;
+    setBusy(true);
+    message.textContent = &#39;Выполняется запрос…&#39;;
+    try {
+        await task();
+    } catch (error) {
+        message.textContent = error.message;
+    } finally {
+        setBusy(false);
+    }
+}
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> <code>request()</code> объединяет отправку, чтение
+                JSON и проверку HTTP-статуса. <code>run()</code> управляет состоянием интерфейса и
+                гарантирует снятие блокировки. Флаг <code>busy</code> предотвращает запуск второй
+                операции до завершения первой. Поля тоже блокируются, чтобы пользователь не потерял
+                текст, изменённый во время сохранения.
+            </p>
+            <h3>Шаг 3.2 — отрисовка и удаление</h3>
+            <pre><code class="language-javascript">function render() {
+    list.replaceChildren();
+    if (news.length === 0) {
+        const empty = document.createElement(&#39;li&#39;);
+        empty.textContent = &#39;Новостей пока нет.&#39;;
+        list.append(empty);
+        return;
+    }
+    for (const item of news) {
+        const li = document.createElement(&#39;li&#39;);
+        const title = document.createElement(&#39;strong&#39;);
+        const content = document.createElement(&#39;p&#39;);
+        const button = document.createElement(&#39;button&#39;);
+        title.textContent = item.title;
+        content.textContent = item.content;
+        button.type = &#39;button&#39;;
+        button.textContent = &#39;Удалить&#39;;
+        button.disabled = busy;
+        button.addEventListener(&#39;click&#39;, () =&gt; {
+            if (busy || !confirm(&#39;Удалить эту новость?&#39;)) return;
+            run(async () =&gt; {
+                const data = await request({ action: &#39;delete&#39;, id: item.id });
+                news = news.filter(row =&gt; String(row.id) !== String(data.deleted));
+                render();
+                message.textContent = &#39;Новость удалена.&#39;;
+            });
+        });
+        li.append(title, content, button);
+        list.append(li);
+    }
+}
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> функция создаёт DOM-элементы и вставляет
+                пользовательские данные через <code>textContent</code>. Запись исчезает из
+                локального массива только после успешного ответа. Приведение id к строкам учитывает,
+                что PDO может вернуть идентификатор строкой, а API удаления — числом.
+            </p>
+            <h3>Шаг 3.3 — загрузка и добавление</h3>
+            <pre><code class="language-javascript">function loadNews() {
+    return run(async () =&gt; {
+        const data = await request();
+        news = data.news;
+        render();
+        message.textContent = &#39;Список загружен.&#39;;
+    });
+}
+
+form.addEventListener(&#39;submit&#39;, event =&gt; {
+    event.preventDefault();
+    if (busy) return;
+    const fields = new FormData(form);
+    const payload = {
+        action: &#39;create&#39;,
+        title: fields.get(&#39;title&#39;),
+        content: fields.get(&#39;content&#39;)
+    };
+    run(async () =&gt; {
+        const data = await request(payload);
+        news.unshift(data.item);
+        render();
+        form.reset();
+        message.textContent = &#39;Новость добавлена.&#39;;
+    });
+});
+
+reload.addEventListener(&#39;click&#39;, loadNews);
+loadNews();
+</code></pre>
+            <p>
+                Значения <code>FormData</code> считываются до блокировки полей: отключённые поля в
+                неё не включаются. При неудаче <code>form.reset()</code> не выполняется, и
+                пользователь может исправить данные. Успешный ответ содержит созданную запись,
+                поэтому дополнительный запрос списка не нужен.
+            </p>
+            <h2>Задание 4. Проверить приложение</h2>
+            <p>
+                Откройте <code>news-app.html</code> через тот же локальный сайт, что и
+                <code>api-news.php</code>, например <code>http://site.local/news-app.html</code>.
+                Откройте Network и включите фильтр Fetch/XHR.
+            </p>
+            <ol>
+                <li>При открытии страницы проверьте GET и ответ 200 со списком.</li>
+                <li>
+                    Добавьте новость. Ожидайте POST, JSON в теле, ответ 201 и новую запись без
+                    загрузки HTML-документа.
+                </li>
+                <li>
+                    Проверьте запись через <code>admin.php</code> или phpMyAdmin: данные должны
+                    сохраниться в MySQL.
+                </li>
+                <li>
+                    Отправьте заголовок из пробелов. Ожидайте 422, сообщение на странице и
+                    сохранение текста формы.
+                </li>
+                <li>
+                    Добавьте текст <code>&lt;b&gt;Пример&lt;/b&gt;</code>. Он должен показаться
+                    буквально, а не стать HTML-разметкой.
+                </li>
+                <li>
+                    Отмените подтверждение удаления: запроса быть не должно. Затем подтвердите —
+                    ожидайте 200 и исчезновение выбранной новости.
+                </li>
+                <li>
+                    Включите замедление сети в DevTools и отправьте форму. Кнопки и поля должны
+                    блокироваться до окончания запроса; повторного добавления быть не должно.
+                </li>
+                <li>
+                    Переключите сеть в Offline и нажмите «Обновить список». Ожидайте сообщение об
+                    ошибке, сохранение старого списка и восстановление кнопок. Верните обычный режим
+                    и повторите загрузку.
+                </li>
+                <li>Удалите последнюю учебную новость. Ожидайте надпись «Новостей пока нет».</li>
+            </ol>
+            <h3>Проверка ошибок API напрямую</h3>
+            <p>Выполните в Console на странице приложения:</p>
+            <pre><code class="language-javascript">fetch(&#39;api-news.php&#39;, {
+    method: &#39;POST&#39;,
+    headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+    body: &#39;{broken&#39;
+}).then(async response =&gt; console.log(response.status, await response.json()));
+</code></pre>
+            <p>
+                Ожидайте 400 и JSON с описанием ошибки. Повторите с телом
+                <code>JSON.stringify({action: &#39;delete&#39;, id: -1})</code> — ожидайте 422; с
+                заведомо отсутствующим положительным id — 404. Убедитесь, что эти запросы не меняют
+                существующие записи.
+            </p>
+            <h2>Задание 5. Самостоятельная работа</h2>
+            <ol>
+                <li>Добавьте рядом со списком число отображаемых новостей.</li>
+                <li>
+                    Добавьте фильтрацию заголовков на клиенте без запроса к серверу. Сохраняйте
+                    исходный массив, чтобы очищение поиска восстанавливало весь список.
+                </li>
+                <li>
+                    Дополнительное задание: реализуйте редактирование через
+                    <code>action: &#39;update&#39;</code>. Проверьте id, существование новости и
+                    поля на сервере; возвращайте обновлённую запись. Используйте знания из
+                    лабораторной №6.
+                </li>
+            </ol>
+            <h2>Что сдать</h2>
+            <ul>
+                <li>
+                    <code>api-news.php</code>, <code>news-app.html</code>,
+                    <code>news-app.js</code> и конфигурацию подключения без реальных внешних
+                    секретов.
+                </li>
+                <li>Скриншоты интерфейса и Network для успешного POST и ошибки 422.</li>
+                <li>Краткий протокол проверок, включая отсутствие сети и некорректный JSON.</li>
+                <li>
+                    Пояснение, где выполняется серверная проверка и почему нельзя заменить её
+                    проверкой в браузере.
+                </li>
+            </ul>
+            <h2>Критерии выполнения</h2>
+            <p>
+                Список загружается, новости добавляются и удаляются без перезагрузки; данные
+                сохраняются в базе; API возвращает JSON и подходящие статусы; ошибки видны
+                пользователю; поля не очищаются при ошибке; повторные действия блокируются на время
+                запроса; пользовательский текст не интерпретируется как HTML.
+            </p>
+            <h2>Контрольные вопросы</h2>
+            <ol>
+                <li>Почему JSON читается из <code>php://input</code>?</li>
+                <li>Почему HTTP 422 не перехватывается автоматически как сетевая ошибка?</li>
+                <li>Для чего нужен <code>finally</code>?</li>
+                <li>Когда безопасно удалять запись из локального массива?</li>
+                <li>Что произойдёт, если сервер сохранил запись, но ответ потерялся?</li>
+            </ol>
+        </main>
+    </body>
+</html>

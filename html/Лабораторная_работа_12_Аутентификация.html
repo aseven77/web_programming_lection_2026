@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №12</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №12</h1>
+            <h2>Вход, личный профиль и выход</h2>
+            <p>
+                <a
+                    href="Web-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9B%D0%B5%D0%BA%D1%86%D0%B8%D1%8F_12_%D0%90%D1%83%D1%82%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >Лекция №12</a
+                >
+                ·
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_11_%D0%A0%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >Предыдущая работа: регистрация</a
+                >
+                ·
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_13_%D0%90%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >Следующая работа: права доступа</a
+                >
+            </p>
+            <h2>Что сделаем</h2>
+            <p>
+                Пользователь из таблицы <code>users</code> сможет войти по email и паролю, открыть
+                свой профиль и выйти. Гость не сможет получить профиль прямым запросом по адресу.
+            </p>
+            <h2>Перед началом</h2>
+            <p>
+                Нужны выполненная работа №11, PHP 8.0 с <code>pdo_mysql</code> и
+                <code>mbstring</code>, рабочие <code>config.php</code> и <code>bootstrap.php</code>,
+                хотя бы одна зарегистрированная учебная запись с известным вам паролем. Не
+                вставляйте пароль напрямую в <code>users.password_hash</code>.
+            </p>
+            <pre><code class="language-text">ваш сайт/
+├── config.php
+├── bootstrap.php
+├── register.php
+├── auth.php       ← поиск текущего пользователя
+├── login.php      ← форма входа
+├── profile.php    ← закрытая страница
+└── logout.php     ← обработчик выхода
+</code></pre>
+            <p>
+                Готовые версии доступны в
+                <a href="../examples/auth/README.md">комплекте примеров</a>.
+                <code>bootstrap.php</code> из №11 не переписываем и повторный
+                <code>session_start()</code> в страницы не добавляем.
+            </p>
+            <h2>Шаг 1. Научить сайт находить текущего пользователя</h2>
+            <p>
+                Создайте <strong>полный файл <code>auth.php</code></strong
+                >:
+            </p>
+            <!-- example:auth.php -->
+            <pre><code class="language-php">&lt;?php
+require_once __DIR__ . &#39;/bootstrap.php&#39;;
+
+function auth_user(): ?array {
+    global $pdo;
+    $id = $_SESSION[&#39;user_id&#39;] ?? null;
+    if (!is_int($id) || $id &lt; 1) {
+        return null;
+    }
+    $stmt = $pdo-&gt;prepare(&#39;SELECT id, name, email, role FROM users WHERE id = ?&#39;);
+    $stmt-&gt;execute([$id]);
+    $user = $stmt-&gt;fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        unset($_SESSION[&#39;user_id&#39;]);
+        return null;
+    }
+    return $user;
+}
+
+function auth_require_user(): array {
+    $user = auth_user();
+    if ($user === null) {
+        header(&#39;Location: login.php&#39;, true, 303);
+        exit;
+    }
+    return $user;
+}
+</code></pre>
+            <!-- /example -->
+            <h3>Как читать код</h3>
+            <p>
+                <code>auth_user()</code> берёт <code>user_id</code> из серверной сессии. Число
+                записывает наш обработчик входа, а не форма посетителя. Если номера нет,
+                возвращается <code>null</code>. Если он есть, PDO читает пользователя из базы.
+            </p>
+            <p>
+                <code>?array</code> означает «массив или null». В запросе намеренно нет
+                <code>password_hash</code>: профиль не нуждается в хеше. Если запись удалена из
+                базы, убираем устаревший <code>user_id</code> из сессии.
+            </p>
+            <p>
+                <code>auth_require_user()</code> либо возвращает найденный массив, либо направляет
+                гостя на вход и останавливает обработчик. <code>global $pdo</code> использует общее
+                подключение, уже созданное в <code>config.php</code>.
+            </p>
+            <p>
+                <strong>Маленькая проверка:</strong> откройте <code>auth.php</code> через сервер.
+                Это файл функций, поэтому пустой ответ без ошибки — ожидаемый результат.
+            </p>
+            <h2>Шаг 2. Создать вход: серверная часть</h2>
+            <p>В <code>login.php</code> будет два блока. <strong>Блок 1 из 2:</strong></p>
+            <!-- example:login.php#server -->
+            <pre><code class="language-php">&lt;?php
+require_once __DIR__ . &#39;/auth.php&#39;;
+if (auth_user() !== null) {
+    header(&#39;Location: profile.php&#39;, true, 303);
+    exit;
+}
+$error = &#39;&#39;;
+$email = &#39;&#39;;
+
+if ($_SERVER[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {
+    auth_check_post();
+    $email = strtolower(trim(auth_field($_POST, &#39;email&#39;)));
+    $password = auth_field($_POST, &#39;password&#39;);
+    $user = false;
+    if (strlen($email) &lt;= 191 &amp;&amp; filter_var($email, FILTER_VALIDATE_EMAIL) &amp;&amp;
+        strlen($password) &gt;= 12 &amp;&amp; strlen($password) &lt;= 72 &amp;&amp; strpos($password, &quot;\0&quot;) === false) {
+        $stmt = $pdo-&gt;prepare(&#39;SELECT id, password_hash FROM users WHERE email = ?&#39;);
+        $stmt-&gt;execute([$email]);
+        $user = $stmt-&gt;fetch(PDO::FETCH_ASSOC);
+    }
+    // Учебный резервный хеш уменьшает различие времени для неизвестного email.
+    $hash = $user ? $user[&#39;password_hash&#39;] : &#39;$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.&#39;;
+    $validPassword = password_verify($password, $hash);
+    if ($user &amp;&amp; $validPassword) {
+        session_regenerate_id(true);
+        $_SESSION[&#39;user_id&#39;] = (int) $user[&#39;id&#39;];
+        $_SESSION[&#39;auth_csrf&#39;] = bin2hex(random_bytes(32));
+        header(&#39;Location: profile.php&#39;, true, 303);
+        exit;
+    }
+    $error = &#39;Неверный email или пароль.&#39;;
+}
+?&gt;
+</code></pre>
+            <!-- /example -->
+            <h3>Что происходит</h3>
+            <ol>
+                <li>Уже вошедшего пользователя направляем в профиль.</li>
+                <li>Для POST проверяем CSRF, затем email и пароль.</li>
+                <li>Ищем учётную запись параметризованным запросом.</li>
+                <li><code>password_verify()</code> проверяет пароль по хешу.</li>
+                <li>
+                    При успехе меняем идентификатор сессии, сохраняем целочисленный
+                    <code>user_id</code>, обновляем токен.
+                </li>
+                <li>
+                    При неудаче показываем одинаковую ошибку для неверного пароля и неизвестного
+                    email.
+                </li>
+            </ol>
+            <p>
+                Резервный хеш нужен только для проверки при отсутствии пользователя. Условие
+                <code>$user &amp;&amp; $validPassword</code> не позволяет войти через него. Он не
+                является паролем какого-либо созданного администратора.
+            </p>
+            <p>
+                В этом примере нет ограничения частоты входов: это упражнение для локального
+                сервера, не законченная публичная система аутентификации.
+            </p>
+            <h2>Шаг 3. Добавить форму входа</h2>
+            <p><strong>Блок 2 из 2</strong> — добавьте после первого:</p>
+            <!-- example:login.php#html -->
+            <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Вход&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Вход&lt;/h1&gt;
+&lt;?php if ($error !== &#39;&#39;): ?&gt;&lt;p role=&quot;alert&quot;&gt;&lt;?= auth_e($error) ?&gt;&lt;/p&gt;&lt;?php endif; ?&gt;
+&lt;form method=&quot;post&quot; action=&quot;login.php&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;csrf&quot; value=&quot;&lt;?= auth_e(auth_csrf()) ?&gt;&quot;&gt;
+    &lt;p&gt;&lt;label&gt;Email &lt;input type=&quot;email&quot; name=&quot;email&quot; required autocomplete=&quot;username&quot; value=&quot;&lt;?= auth_e($email) ?&gt;&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Пароль &lt;input type=&quot;password&quot; name=&quot;password&quot; required autocomplete=&quot;current-password&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;button type=&quot;submit&quot;&gt;Войти&lt;/button&gt;
+&lt;/form&gt;
+&lt;p&gt;&lt;a href=&quot;register.php&quot;&gt;Создать учётную запись&lt;/a&gt;&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <!-- /example -->
+            <p>
+                <strong>Маленькая проверка:</strong> откройте <code>login.php</code>, введите
+                зарегистрированный email и заведомо неправильный пароль. Ожидается сообщение
+                «Неверный email или пароль», email остаётся, пароль не возвращается в HTML. С
+                правильным паролем пока не входите — сначала создадим профиль.
+            </p>
+            <h2>Шаг 4. Создать защищённый профиль</h2>
+            <p>
+                Создайте <strong>полный файл <code>profile.php</code></strong
+                >:
+            </p>
+            <!-- example:profile.php -->
+            <pre><code class="language-php">&lt;?php
+require_once __DIR__ . &#39;/auth.php&#39;;
+$user = auth_require_user();
+header(&#39;Cache-Control: no-store&#39;);
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Мой профиль&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Здравствуйте, &lt;?= auth_e($user[&#39;name&#39;]) ?&gt;!&lt;/h1&gt;
+&lt;p&gt;Email: &lt;?= auth_e($user[&#39;email&#39;]) ?&gt;&lt;/p&gt;
+&lt;p&gt;Роль: &lt;?= auth_e($user[&#39;role&#39;]) ?&gt;&lt;/p&gt;
+&lt;form method=&quot;post&quot; action=&quot;logout.php&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;csrf&quot; value=&quot;&lt;?= auth_e(auth_csrf()) ?&gt;&quot;&gt;
+    &lt;button type=&quot;submit&quot;&gt;Выйти&lt;/button&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <!-- /example -->
+            <p>
+                Проверка стоит до HTML. Имя, email и роль экранируются. В профиле нет поля с хешем и
+                нет возможности выбрать другой <code>user_id</code> из URL.
+                <code>Cache-Control: no-store</code> запрещает сохранять ответ как обычную
+                кешируемую страницу.
+            </p>
+            <p>
+                <strong>Маленькая проверка:</strong> в браузере без входа откройте
+                <code>profile.php</code> напрямую. В Network должен быть 303 на
+                <code>login.php</code>; HTML профиля не должен отправляться гостю.
+            </p>
+            <h2>Шаг 5. Создать выход</h2>
+            <p>
+                Создайте <strong>полный файл <code>logout.php</code></strong
+                >:
+            </p>
+            <!-- example:logout.php -->
+            <pre><code class="language-php">&lt;?php
+require_once __DIR__ . &#39;/bootstrap.php&#39;;
+auth_check_post();
+$_SESSION = [];
+$params = session_get_cookie_params();
+setcookie(session_name(), &#39;&#39;, [
+    &#39;expires&#39; =&gt; time() - 3600,
+    &#39;path&#39; =&gt; $params[&#39;path&#39;],
+    &#39;domain&#39; =&gt; $params[&#39;domain&#39;],
+    &#39;secure&#39; =&gt; $params[&#39;secure&#39;],
+    &#39;httponly&#39; =&gt; $params[&#39;httponly&#39;],
+    &#39;samesite&#39; =&gt; $params[&#39;samesite&#39;],
+]);
+session_destroy();
+header(&#39;Location: login.php&#39;, true, 303);
+exit;
+</code></pre>
+            <!-- /example -->
+            <p>
+                <code>$_SESSION = []</code> очищает данные, <code>setcookie()</code> с прошедшим
+                сроком удаляет cookie, <code>session_destroy()</code> удаляет серверную сессию. Путь
+                и домен cookie берём из текущих настроек, чтобы удалять именно нужную cookie.
+            </p>
+            <p>
+                До этих действий стоят проверки POST и CSRF. Если набрать <code>logout.php</code> в
+                адресной строке, получится GET и ответ 405 — это правильный результат. Выход
+                выполняется кнопкой профиля.
+            </p>
+            <h2>Шаг 6. Пройти полный путь</h2>
+            <ol>
+                <li>Откройте вход и войдите учётной записью из №11.</li>
+                <li>Увидите имя, email, роль <code>user</code> и кнопку выхода.</li>
+                <li>Обновите профиль: пользователь остаётся вошедшим.</li>
+                <li>
+                    Откройте профиль в новой обычной вкладке того же браузерного профиля: состояние
+                    общее.
+                </li>
+                <li>Нажмите «Выйти». Ожидайте POST → 303 → <code>login.php</code>.</li>
+                <li>
+                    Снова запросите <code>profile.php</code> или обновите старую вкладку. Ожидайте
+                    переход на вход.
+                </li>
+            </ol>
+            <p>
+                <strong>Проверка смены идентификатора:</strong> в DevTools откройте
+                Application/Storage → Cookies. Сравните <code>PHPSESSID</code> до успешного входа и
+                после: значение должно измениться. Не публикуйте сами значения в отчёте — достаточно
+                отметить факт изменения. Имя cookie может отличаться при иной настройке PHP.
+            </p>
+            <h2>Шаг 7. Проверить отрицательные сценарии</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Действие</th>
+                            <th>Ожидаемый результат</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Войти с неизвестным email</td>
+                            <td>Та же ошибка, что при неверном пароле</td>
+                        </tr>
+                        <tr>
+                            <td>Отправить вход без <code>csrf</code></td>
+                            <td>403, вход не выполнен</td>
+                        </tr>
+                        <tr>
+                            <td>Открыть профиль гостем по прямой ссылке</td>
+                            <td>303 на вход</td>
+                        </tr>
+                        <tr>
+                            <td>Войти в одном браузере и открыть профиль в другом</td>
+                            <td>Второй браузер остаётся гостем</td>
+                        </tr>
+                        <tr>
+                            <td>Передать <code>profile.php?user_id=999</code></td>
+                            <td>Профиль текущего пользователя, параметр игнорируется</td>
+                        </tr>
+                        <tr>
+                            <td>Открыть <code>logout.php</code> через GET, будучи вошедшим</td>
+                            <td>405, сессия остаётся активной</td>
+                        </tr>
+                        <tr>
+                            <td>Удалить токен из формы выхода и отправить</td>
+                            <td>403, сессия остаётся активной</td>
+                        </tr>
+                        <tr>
+                            <td>Выполнить правильный выход и вновь запросить профиль</td>
+                            <td>Профиль недоступен</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Открыть регистрацию до входа, затем войти в другой вкладке и
+                                отправить старую форму
+                            </td>
+                            <td>403 из-за смены токена; после обновления формы можно повторить</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                Для независимых сессий надёжнее использовать разные браузеры или профили. Несколько
+                окон инкогнито могут использовать общие приватные cookie.
+            </p>
+            <h2>Типичные ошибки</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Симптом</th>
+                            <th>Что исправить</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Цикл «вход → профиль → вход»</td>
+                            <td>
+                                Проверить сохранение cookie, адрес и флаг <code>secure</code> на
+                                локальном HTTP
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Неверный пароль даже для новой записи</td>
+                            <td>
+                                Проверить длину сохранённого хеша и использование
+                                <code>password_verify()</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>Headers already sent</code></td>
+                            <td>
+                                Все проверки и заголовки должны стоять до HTML; убрать BOM и echo
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>После GET выхода ничего не произошло</td>
+                            <td>Так задумано: используйте POST-форму</td>
+                        </tr>
+                        <tr>
+                            <td>Пропал список №10 после выхода</td>
+                            <td>При общей сессии полный выход очищает и временные отметки</td>
+                        </tr>
+                        <tr>
+                            <td>Видна старая страница по кнопке «Назад»</td>
+                            <td>
+                                Сделать новый запрос; оценивать ответ сервера, а не старое
+                                изображение страницы
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Самостоятельная работа</h2>
+            <ol>
+                <li>
+                    Добавьте в регистрацию ссылку на <code>login.php</code> теперь, когда файл
+                    существует.
+                </li>
+                <li>
+                    Создайте ещё одну закрытую страницу <code>account-help.php</code>, используя
+                    <code>auth_require_user()</code>. Проверьте гостевой доступ.
+                </li>
+                <li>
+                    Со звёздочкой: смените имя учебного пользователя в БД и обновите профиль.
+                    Объясните, почему новое имя видно без повторного входа.
+                </li>
+            </ol>
+            <h2>Что сдать и критерии</h2>
+            <p>
+                Сдайте четыре новых файла, актуальный <code>bootstrap.php</code> и таблицу проверок.
+                Приложите скриншоты профиля и ошибки входа, без cookie, токенов и настоящих паролей.
+            </p>
+            <p>
+                Работа выполнена, если правильный пароль открывает профиль, неправильный не создаёт
+                вход, идентификатор сессии меняется, прямой гостевой запрос закрыт, выход требует
+                POST и CSRF и действительно прекращает доступ текущей сессии.
+            </p>
+            <h2>Вопросы для защиты</h2>
+            <ol>
+                <li>Чем пользователь в БД отличается от его сессии?</li>
+                <li>Почему сессия может существовать у гостя?</li>
+                <li>Почему <code>header()</code> сопровождается <code>exit</code>?</li>
+                <li>Зачем читать пользователя из базы на каждом запросе?</li>
+                <li>Чем закрытие вкладки отличается от выхода?</li>
+            </ol>
+            <p>
+                В
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_13_%D0%90%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >работе №13</a
+                >
+                добавим проверку роли и вернёмся к управлению новостями.
+            </p>
+        </main>
+    </body>
+</html>

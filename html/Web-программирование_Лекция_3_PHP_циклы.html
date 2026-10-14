@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 3</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 3</h1>
+            <h2>PHP: циклы на практике</h2>
+            <hr />
+            <h2>1. Зачем нужны циклы</h2>
+            <p>
+                На прошлой лекции мы разобрались с переменными, массивами и простыми функциями PHP.
+                Но по-настоящему полезными скрипты становятся тогда, когда умеют
+                <strong>автоматически обрабатывать много однотипных данных</strong> — список
+                товаров, комментариев, пользователей, новостей. Именно для этого нужны
+                <strong>циклы</strong>: конструкции, которые повторяют один и тот же блок кода для
+                каждого элемента набора данных.
+            </p>
+            <p>
+                Сегодня разберём три вида циклов на одном сквозном примере —
+                <strong>ленте новостей</strong>, а затем закрепим их ещё на паре простых задач.
+            </p>
+            <hr />
+            <h2>2. Готовим данные: массив новостей</h2>
+            <p>
+                Представим, что у нас есть небольшая лента новостей. Пока без базы данных — просто
+                массив массивов прямо в коде:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$news = [
+    [&quot;title&quot; =&gt; &quot;Открылась новая библиотека&quot;, &quot;views&quot; =&gt; 120],
+    [&quot;title&quot; =&gt; &quot;Итоги олимпиады по программированию&quot;, &quot;views&quot; =&gt; 340],
+    [&quot;title&quot; =&gt; &quot;Расписание сессии обновлено&quot;, &quot;views&quot; =&gt; 980],
+    [&quot;title&quot; =&gt; &quot;Встреча выпускников факультета&quot;, &quot;views&quot; =&gt; 75],
+];
+</code></pre>
+            <p>
+                Каждый элемент <code>$news</code> — это ассоциативный массив с двумя ключами:
+                <code>title</code> (заголовок) и <code>views</code> (число просмотров). Такой набор
+                данных прекрасно подходит для отработки циклов.
+            </p>
+            <hr />
+            <h2>3. Цикл <code>foreach</code>: перебор новостей</h2>
+            <p>
+                <code>foreach</code> — самый удобный цикл для перебора массива, когда нам не важен
+                числовой индекс, а нужен сам элемент.
+            </p>
+            <pre><code class="language-php">&lt;?php
+foreach ($news as $item) {
+    echo $item[&quot;title&quot;] . &quot; — &quot; . $item[&quot;views&quot;] . &quot; просмотров\n&quot;;
+}
+</code></pre>
+            <p>Результат:</p>
+            <pre><code>Открылась новая библиотека — 120 просмотров
+Итоги олимпиады по программированию — 340 просмотров
+Расписание сессии обновлено — 980 просмотров
+Встреча выпускников факультета — 75 просмотров
+</code></pre>
+            <p>
+                Если нужен ещё и порядковый номер новости, <code>foreach</code> можно совместить со
+                счётчиком:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$number = 1;
+
+foreach ($news as $item) {
+    echo $number . &quot;. &quot; . $item[&quot;title&quot;] . &quot;\n&quot;;
+    $number++;
+}
+</code></pre>
+            <hr />
+            <h2>4. Цикл <code>for</code>: перебор по индексу</h2>
+            <p>
+                Цикл <code>for</code> удобен, когда важен именно числовой индекс элемента —
+                например, чтобы вывести только первые три новости:
+            </p>
+            <pre><code class="language-php">&lt;?php
+for ($i = 0; $i &lt; 3; $i++) {
+    echo ($i + 1) . &quot;. &quot; . $news[$i][&quot;title&quot;] . &quot;\n&quot;;
+}
+</code></pre>
+            <p>
+                Здесь <code>$i</code> пробегает значения <code>0, 1, 2</code>, а
+                <code>$news[$i]</code> обращается к нужному элементу массива по индексу.
+            </p>
+            <hr />
+            <h2>5. Цикл <code>while</code>: пока выполняется условие</h2>
+            <p>
+                <code>while</code> повторяет блок кода, пока условие в скобках остаётся истинным. Он
+                полезен, когда заранее неизвестно точное число повторений.
+            </p>
+            <p>
+                Пример: выводим новости, пока не встретим первую с числом просмотров больше 500 (как
+                будто ищем «горячую» новость):
+            </p>
+            <pre><code class="language-php">&lt;?php
+$i = 0;
+
+while ($i &lt; count($news) &amp;&amp; $news[$i][&quot;views&quot;] &lt;= 500) {
+    echo $news[$i][&quot;title&quot;] . &quot; (&quot; . $news[$i][&quot;views&quot;] . &quot;)\n&quot;;
+    $i++;
+}
+
+echo &quot;Нашли популярную новость: &quot; . $news[$i][&quot;title&quot;];
+</code></pre>
+            <hr />
+            <h2>6. Условие внутри цикла: выводим только популярные новости</h2>
+            <p>
+                Циклы часто комбинируют с условием <code>if</code>, чтобы отобрать только нужные
+                элементы — это одна из самых частых задач на практике.
+            </p>
+            <pre><code class="language-php">&lt;?php
+foreach ($news as $item) {
+    if ($item[&quot;views&quot;] &gt; 200) {
+        echo $item[&quot;title&quot;] . &quot; — популярная новость!\n&quot;;
+    }
+}
+</code></pre>
+            <hr />
+            <h2>7. Пример 2: подсчёт суммы и среднего</h2>
+            <p>
+                Циклы удобны и для вычислений над всем набором данных — например, посчитаем общее и
+                среднее число просмотров всех новостей:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$totalViews = 0;
+
+foreach ($news as $item) {
+    $totalViews += $item[&quot;views&quot;];
+}
+
+$averageViews = $totalViews / count($news);
+
+echo &quot;Всего просмотров: &quot; . $totalViews . &quot;\n&quot;;
+echo &quot;В среднем на новость: &quot; . round($averageViews, 1) . &quot;\n&quot;;
+</code></pre>
+            <hr />
+            <h2>8. Пример 3: собираем HTML-список новостей</h2>
+            <p>
+                На практике PHP чаще всего не просто печатает текст в консоль, а формирует
+                HTML-разметку для страницы. Соберём из массива <code>$news</code> обычный
+                HTML-список:
+            </p>
+            <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Лента новостей&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Последние новости&lt;/h1&gt;
+    &lt;ul&gt;
+        &lt;?php foreach ($news as $item): ?&gt;
+            &lt;li&gt;
+                &lt;strong&gt;&lt;?= $item[&quot;title&quot;] ?&gt;&lt;/strong&gt;
+                (&lt;?= $item[&quot;views&quot;] ?&gt; просмотров)
+            &lt;/li&gt;
+        &lt;?php endforeach; ?&gt;
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                Здесь использован альтернативный синтаксис
+                <code>foreach (...): ... endforeach;</code> — он часто применяется именно тогда,
+                когда PHP-код перемежается с HTML-разметкой, так как без лишних фигурных скобок код
+                читается удобнее. Конструкция <code>&lt;?= $item[&quot;title&quot;] ?&gt;</code> —
+                сокращённая запись <code>&lt;?php echo $item[&quot;title&quot;]; ?&gt;</code>.
+            </p>
+            <hr />
+            <h2>9. Итоги</h2>
+            <ol>
+                <li>
+                    Циклы позволяют автоматически обрабатывать однотипные наборы данных — от
+                    новостной ленты до списка товаров или пользователей.
+                </li>
+                <li>
+                    <strong><code>foreach</code></strong> — основной цикл для перебора массивов,
+                    когда важен сам элемент, а не его номер.
+                </li>
+                <li>
+                    <strong><code>for</code></strong> — удобен, когда нужен точный контроль над
+                    числовым индексом (например, вывести только первые N элементов).
+                </li>
+                <li>
+                    <strong><code>while</code></strong> — повторяет действие, пока выполняется
+                    условие, и полезен, когда заранее неизвестно число повторений.
+                </li>
+                <li>
+                    Циклы часто комбинируются с условием <code>if</code> (отбор нужных элементов) и
+                    с накоплением значений в переменной (подсчёт суммы, среднего).
+                </li>
+                <li>
+                    Тот же самый <code>foreach</code> используется и для формирования HTML-разметки
+                    на странице — именно так на PHP строится вывод динамических списков.
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

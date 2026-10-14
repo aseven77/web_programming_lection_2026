@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 2</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 2</h1>
+            <h2>PHP: основы серверного программирования</h2>
+            <hr />
+            <h2>1. Зачем нужен PHP</h2>
+            <p>
+                В первой лекции мы рассмотрели, что backend-часть веб-приложения отвечает за логику,
+                недоступную пользователю напрямую: обработку запросов, работу с базой данных,
+                формирование ответа клиенту. <strong>PHP (PHP: Hypertext Preprocessor)</strong> —
+                один из самых распространённых языков для написания именно такой серверной логики.
+            </p>
+            <p>Особенности PHP:</p>
+            <ul>
+                <li>
+                    <strong>Интерпретируемый язык</strong> — код выполняется построчно на сервере в
+                    момент запроса, без предварительной компиляции.
+                </li>
+                <li>
+                    <strong>Изначально заточен под веб</strong> — встроены готовые механизмы для
+                    работы с HTTP-запросами, сессиями, формами, файлами.
+                </li>
+                <li>
+                    <strong>Свободно распространяется</strong> — обработчик PHP бесплатен и
+                    установлен на подавляющем большинстве хостингов.
+                </li>
+                <li>
+                    <strong>Огромная экосистема</strong> — от небольших скриптов до крупных
+                    фреймворков (Laravel, Symfony) и таких проектов, как WordPress.
+                </li>
+            </ul>
+            <p>
+                PHP-код выполняется <strong>на сервере</strong>, и клиенту (браузеру) отправляется
+                уже готовый результат — HTML-страница или JSON-данные, а не сам код PHP. Файл со
+                сценарием обязательно должен иметь расширение <code>.php</code> — иначе веб-сервер
+                посчитает его обычной статической страницей и не станет выполнять.
+            </p>
+            <hr />
+            <h2>2. Как PHP-скрипт встраивается в страницу</h2>
+            <p>
+                PHP-код размещается внутри специальных тегов <code>&lt;?php ... ?&gt;</code> и может
+                свободно чередоваться с обычной HTML-разметкой:
+            </p>
+            <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Пример PHP-страницы&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;
+        &lt;?php
+            echo &quot;Привет, мир!&quot;;
+        ?&gt;
+    &lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                Когда браузер запрашивает такую страницу, веб-сервер (например, Nginx с PHP-FPM)
+                выполняет код между <code>&lt;?php</code> и <code>?&gt;</code>, а клиенту отправляет
+                уже готовый HTML — код PHP пользователю никогда не виден.
+            </p>
+            <hr />
+            <h2>3. Переменные, типы данных и операторы</h2>
+            <h3>Переменные</h3>
+            <p>
+                Переменные в PHP всегда начинаются со знака <code>$</code>, тип указывать не нужно —
+                PHP определяет его автоматически:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$name = &quot;Азамат&quot;;
+$age = 30;
+$isStudent = false;
+$price = 199.99;
+</code></pre>
+            <h3>Основные типы данных</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Тип</th>
+                            <th>Описание</th>
+                            <th>Пример</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>string</code></td>
+                            <td>Строка</td>
+                            <td><code>&quot;Привет&quot;</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>int</code></td>
+                            <td>Целое число</td>
+                            <td><code>42</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>float</code></td>
+                            <td>Число с плавающей точкой</td>
+                            <td><code>3.14</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>bool</code></td>
+                            <td>Логическое значение</td>
+                            <td><code>true</code>, <code>false</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>array</code></td>
+                            <td>Массив</td>
+                            <td><code>[1, 2, 3]</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>null</code></td>
+                            <td>Отсутствие значения</td>
+                            <td><code>null</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3>Операторы</h3>
+            <pre><code class="language-php">&lt;?php
+$sum = 5 + 3;        // арифметические: + - * / % **
+$isEqual = (5 == &quot;5&quot;);   // нестрогое сравнение — true
+$isIdentical = (5 === &quot;5&quot;); // строгое сравнение (тип + значение) — false
+$result = true &amp;&amp; false; // логические: &amp;&amp; || !
+$greeting = &quot;Привет, &quot; . $name; // конкатенация строк через точку
+</code></pre>
+            <p>
+                <strong>Важно:</strong> оператор <code>==</code> сравнивает только значения (с
+                приведением типов), а <code>===</code> — значения и типы одновременно. В современном
+                PHP рекомендуется использовать строгое сравнение <code>===</code>, чтобы избежать
+                неожиданного поведения при сравнении разных типов.
+            </p>
+            <hr />
+            <h2>4. Массивы</h2>
+            <p>
+                Массивы в PHP бывают <strong>индексными</strong> (числовые ключи) и
+                <strong>ассоциативными</strong> (ключи-строки):
+            </p>
+            <pre><code class="language-php">&lt;?php
+// Индексный массив
+$fruits = [&quot;яблоко&quot;, &quot;банан&quot;, &quot;груша&quot;];
+echo $fruits[0]; // яблоко
+
+// Ассоциативный массив
+$user = [
+    &quot;name&quot; =&gt; &quot;Азамат&quot;,
+    &quot;role&quot; =&gt; &quot;преподаватель&quot;,
+    &quot;city&quot; =&gt; &quot;Уфа&quot;
+];
+echo $user[&quot;name&quot;]; // Азамат
+
+// Перебор массива
+foreach ($fruits as $fruit) {
+    echo $fruit . &quot;\n&quot;;
+}
+
+foreach ($user as $key =&gt; $value) {
+    echo &quot;$key: $value\n&quot;;
+}
+</code></pre>
+            <hr />
+            <h2>5. Условные конструкции и циклы</h2>
+            <pre><code class="language-php">&lt;?php
+$age = 20;
+
+if ($age &gt;= 18) {
+    echo &quot;Совершеннолетний&quot;;
+} elseif ($age &gt;= 14) {
+    echo &quot;Подросток&quot;;
+} else {
+    echo &quot;Ребёнок&quot;;
+}
+
+// Цикл for
+for ($i = 0; $i &lt; 5; $i++) {
+    echo $i;
+}
+
+// Цикл while
+$i = 0;
+while ($i &lt; 5) {
+    echo $i;
+    $i++;
+}
+</code></pre>
+            <hr />
+            <h2>6. Функции</h2>
+            <pre><code class="language-php">&lt;?php
+function greet(string $name): string {
+    return &quot;Здравствуйте, $name!&quot;;
+}
+
+echo greet(&quot;Мир&quot;); // Здравствуйте, Мир!
+</code></pre>
+            <p>
+                Начиная с PHP 7, поддерживается <strong>строгая типизация</strong> параметров и
+                возвращаемого значения (<code>string</code>, <code>int</code>, <code>array</code> и
+                т. д.), что делает код надёжнее и облегчает поиск ошибок ещё до выполнения скрипта.
+            </p>
+            <hr />
+            <h2>7. Получение данных от клиента</h2>
+            <p>
+                Ключевая задача серверного скрипта — обработать данные, присланные пользователем.
+                PHP предоставляет для этого суперглобальные массивы:
+            </p>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Суперглобальный массив</th>
+                            <th>Что содержит</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$_GET</code></td>
+                            <td>Параметры из строки запроса (<code>?key=value</code>)</td>
+                        </tr>
+                        <tr>
+                            <td><code>$_POST</code></td>
+                            <td>Данные, отправленные методом POST (например, из формы)</td>
+                        </tr>
+                        <tr>
+                            <td><code>$_REQUEST</code></td>
+                            <td>
+                                Объединение <code>$_GET</code>, <code>$_POST</code> и
+                                <code>$_COOKIE</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>$_SERVER</code></td>
+                            <td>Информация о сервере и запросе (метод, адрес, заголовки)</td>
+                        </tr>
+                        <tr>
+                            <td><code>$_SESSION</code></td>
+                            <td>Данные текущей сессии пользователя</td>
+                        </tr>
+                        <tr>
+                            <td><code>$_COOKIE</code></td>
+                            <td>Cookie, полученные от браузера</td>
+                        </tr>
+                        <tr>
+                            <td><code>$_FILES</code></td>
+                            <td>Загруженные пользователем файлы</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Пример обработки простой формы:</p>
+            <pre><code class="language-html">&lt;form action=&quot;process.php&quot; method=&quot;post&quot;&gt;
+    &lt;input type=&quot;text&quot; name=&quot;username&quot;&gt;
+    &lt;button type=&quot;submit&quot;&gt;Отправить&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+            <pre><code class="language-php">&lt;?php
+// process.php
+if ($_SERVER[&quot;REQUEST_METHOD&quot;] === &quot;POST&quot;) {
+    $username = htmlspecialchars($_POST[&quot;username&quot;] ?? &quot;&quot;);
+    echo &quot;Здравствуйте, $username!&quot;;
+}
+</code></pre>
+            <p>
+                <strong>Обратите внимание на <code>htmlspecialchars()</code></strong> —
+                экранирование пользовательского ввода перед выводом обязательно, иначе приложение
+                уязвимо к XSS-атакам (внедрению постороннего HTML/JS-кода через данные
+                пользователя).
+            </p>
+            <hr />
+            <h2>8. PHP как обработчик REST API</h2>
+            <p>
+                В первой лекции говорилось, что современные приложения обмениваются данными в
+                формате JSON через REST API. PHP отлично подходит для написания такого API:
+            </p>
+            <pre><code class="language-php">&lt;?php
+header(&quot;Content-Type: application/json; charset=utf-8&quot;);
+
+$data = [
+    &quot;city&quot; =&gt; &quot;Moscow&quot;,
+    &quot;temperature&quot; =&gt; 5,
+    &quot;condition&quot; =&gt; &quot;cloudy&quot;
+];
+
+echo json_encode($data, JSON_UNESCAPED_UNICODE);
+</code></pre>
+            <p>Ответ, который получит клиент:</p>
+            <pre><code class="language-json">{&quot;city&quot;:&quot;Moscow&quot;,&quot;temperature&quot;:5,&quot;condition&quot;:&quot;cloudy&quot;}
+</code></pre>
+            <p>
+                Для чтения тела JSON-запроса (например, при POST-запросе от SPA-приложения на Vue
+                или React) используется:
+            </p>
+            <pre><code class="language-php">&lt;?php
+$input = json_decode(file_get_contents(&quot;php://input&quot;), true);
+$name = $input[&quot;name&quot;] ?? null;
+</code></pre>
+            <hr />
+            <h2>9. Работа с базой данных: PDO</h2>
+            <p>
+                Для взаимодействия с базой данных (MySQL, PostgreSQL) современный PHP использует
+                расширение <strong>PDO (PHP Data Objects)</strong> — единый интерфейс для разных
+                СУБД с поддержкой <strong>подготовленных выражений (prepared statements)</strong>,
+                которые защищают от SQL-инъекций.
+            </p>
+            <pre><code class="language-php">&lt;?php
+$pdo = new PDO(&quot;mysql:host=localhost;dbname=shop;charset=utf8mb4&quot;, &quot;user&quot;, &quot;password&quot;);
+
+// Подготовленное выражение — безопасная подстановка параметров
+$stmt = $pdo-&gt;prepare(&quot;SELECT * FROM products WHERE category = :category&quot;);
+$stmt-&gt;execute([&quot;category&quot; =&gt; &quot;electronics&quot;]);
+
+$products = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($products as $product) {
+    echo $product[&quot;name&quot;] . &quot;\n&quot;;
+}
+</code></pre>
+            <p>
+                <strong
+                    >Никогда не подставляйте пользовательский ввод напрямую в SQL-запрос через
+                    конкатенацию строк</strong
+                >
+                — это классическая уязвимость <strong>SQL-инъекции</strong>. Именованные параметры
+                (<code>:category</code>) в PDO решают эту проблему автоматически.
+            </p>
+            <hr />
+            <h2>10. От отдельных скриптов к современному PHP</h2>
+            <p>
+                Исторически PHP-приложения писались как набор отдельных <code>.php</code>-файлов,
+                обрабатывающих запросы напрямую. Современная разработка на PHP устроена иначе:
+            </p>
+            <ul>
+                <li>
+                    <strong>Composer</strong> — менеджер пакетов PHP (аналог npm для JavaScript),
+                    через него подключаются готовые библиотеки.
+                </li>
+                <li>
+                    <strong>Фреймворки</strong> — Laravel, Symfony — задают структуру проекта, берут
+                    на себя маршрутизацию, работу с базой данных через ORM, шаблонизацию и
+                    безопасность.
+                </li>
+                <li>
+                    <strong>MVC-архитектура</strong> (Model — View — Controller) — разделение кода
+                    на модель данных, представление и логику обработки запроса, что упрощает
+                    поддержку крупных проектов.
+                </li>
+                <li>
+                    <strong>Composer autoload + namespace</strong> — организация кода по классам и
+                    пространствам имён вместо набора разрозненных файлов.
+                </li>
+                <li>
+                    <strong>PSR-стандарты</strong> (PHP Standards Recommendations) — единые
+                    соглашения по стилю кода и структуре, которых придерживается всё современное
+                    PHP-сообщество.
+                </li>
+            </ul>
+            <p>
+                Актуальные версии языка (PHP 8.x) значительно отличаются от PHP 5–7: добавлены
+                строгая типизация, именованные аргументы, enum-типы, улучшенная производительность
+                движка (JIT-компиляция).
+            </p>
+            <hr />
+            <h2>11. Итоги</h2>
+            <ol>
+                <li>
+                    <strong>PHP</strong> — интерпретируемый серверный язык, изначально созданный для
+                    веба: код выполняется на сервере, клиенту отправляется готовый HTML или JSON.
+                </li>
+                <li>
+                    Базовые конструкции — переменные (<code>$имя</code>), типы данных, массивы
+                    (индексные и ассоциативные), условия, циклы и функции — синтаксически близки к
+                    другим C-подобным языкам.
+                </li>
+                <li>
+                    Данные от клиента PHP получает через суперглобальные массивы <code>$_GET</code>,
+                    <code>$_POST</code>, <code>$_SERVER</code> и т. д.; пользовательский ввод
+                    обязательно нужно экранировать перед выводом.
+                </li>
+                <li>
+                    PHP может выступать как обработчик классических форм, так и как
+                    <strong>backend для REST API</strong>, отдающий JSON современным SPA-приложениям
+                    на Vue или React.
+                </li>
+                <li>
+                    Для работы с базой данных используется <strong>PDO</strong> с подготовленными
+                    выражениями — это защищает от SQL-инъекций.
+                </li>
+                <li>
+                    Современная разработка на PHP строится вокруг <strong>Composer</strong>,
+                    фреймворков (Laravel, Symfony) и архитектуры <strong>MVC</strong>, а не
+                    отдельных изолированных скриптов.
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

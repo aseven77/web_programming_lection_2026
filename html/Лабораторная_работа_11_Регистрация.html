@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №11</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №11</h1>
+            <h2>Регистрация пользователей на PHP и MySQL</h2>
+            <p>
+                <a
+                    href="Web-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9B%D0%B5%D0%BA%D1%86%D0%B8%D1%8F_11_%D0%A0%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >Лекция №11</a
+                >
+                ·
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_10_%D0%A1%D0%B5%D1%81%D1%81%D0%B8%D0%B8.html"
+                    >Предыдущая работа: сессии</a
+                >
+                ·
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_12_%D0%90%D1%83%D1%82%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >Следующая работа: вход</a
+                >
+            </p>
+            <h2>Что сделаем</h2>
+            <p>
+                Добавим к сайту новостей таблицу пользователей и страницу <code>register.php</code>.
+                После заполнения формы в базе появится пользователь с ролью <code>user</code>. В
+                этой работе он ещё не входит на сайт — вход добавим в №12.
+            </p>
+            <p>
+                Путь запроса: форма → POST → CSRF → проверка полей → хеширование → INSERT → 303 →
+                сообщение об успехе.
+            </p>
+            <h2>Перед началом</h2>
+            <ol>
+                <li>
+                    Используйте локальные PHP 8.0 и MySQL/MariaDB, расширения
+                    <code>pdo_mysql</code> и <code>mbstring</code>.
+                </li>
+                <li>
+                    Проверьте чтение новостей из базы <code>site</code> и существующий
+                    <code>config.php</code>, создающий <code>$pdo</code>.
+                </li>
+                <li>Сохраните копию своего проекта и базы перед изменениями.</li>
+                <li>
+                    Используйте UTF-8 без BOM. В PHP-файлах не должно быть пробелов перед
+                    <code>&lt;?php</code>.
+                </li>
+                <li>Открывайте страницы через локальный сервер, не через <code>file:///</code>.</li>
+            </ol>
+            <p>
+                Готовые файлы для сверки лежат в
+                <a href="../examples/auth/README.md">examples/auth</a>. В основной работе дополняйте
+                свой учебный сайт. Готовый комплект нужен, если вы хотите сравнить результат или
+                развернуть отдельную копию.
+            </p>
+            <pre><code class="language-text">ваш сайт/
+├── config.php       ← существующее подключение $pdo
+├── bootstrap.php    ← общая подготовка и функции
+└── register.php     ← регистрация
+</code></pre>
+            <h2>Шаг 1. Создать таблицу пользователей</h2>
+            <p>В phpMyAdmin выберите базу <code>site</code>, откройте вкладку SQL и выполните:</p>
+            <!-- example:schema.sql -->
+            <pre><code class="language-sql">-- Выберите учебную базу site в phpMyAdmin перед выполнением.
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL,
+    email VARCHAR(191) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT &#39;user&#39;,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY users_email_unique (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+</code></pre>
+            <!-- /example -->
+            <p>
+                <code>UNIQUE KEY</code> запрещает одинаковые email.
+                <code>password_hash</code> хранит хеш. Значение роли по умолчанию —
+                <code>user</code>. Таблицу <code>news</code> не меняем.
+            </p>
+            <p>
+                Если таблица <code>users</code> уже была, <code>IF NOT EXISTS</code> её не обновит.
+                Сверьте поля и уникальный индекс. При несовпадении используйте отдельную учебную
+                базу или согласуйте изменение схемы; не удаляйте существующие данные.
+            </p>
+            <p>
+                <strong>Маленькая проверка:</strong> откройте структуру <code>users</code>. Должны
+                быть семь столбцов и уникальный индекс <code>users_email_unique</code> по email.
+                Строк пока нет, если таблица новая.
+            </p>
+            <h2>Шаг 2. Проверить подключение</h2>
+            <p>
+                Продолжайте использовать свой <code>config.php</code>. Он должен создавать PDO с
+                режимом исключений и кодировкой <code>utf8mb4</code>. Если подключение ещё не
+                настроено, образец:
+            </p>
+            <!-- example:config.example.php -->
+            <pre><code class="language-php">&lt;?php
+// Скопируйте в config.php и укажите настройки своей локальной базы.
+$pdo = new PDO(
+    &#39;mysql:host=localhost;dbname=site;charset=utf8mb4&#39;,
+    &#39;root&#39;,
+    &#39;&#39;,
+    [
+        PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES =&gt; false,
+    ]
+);
+</code></pre>
+            <!-- /example -->
+            <p>
+                Замените настройки своими. Пустой пароль здесь — только пример локальной
+                конфигурации. Файл сохраните как <code>config.php</code>, а не
+                <code>config.example.php</code>. Не добавляйте закрывающий <code>?&gt;</code>.
+            </p>
+            <h2>Шаг 3. Создать общий файл bootstrap.php</h2>
+            <p>Это <strong>полный файл</strong>. Скопируйте весь блок один раз:</p>
+            <!-- example:bootstrap.php -->
+            <pre><code class="language-php">&lt;?php
+// Подключать до HTML. Другие страницы не должны повторять session_start().
+ini_set(&#39;session.use_strict_mode&#39;, &#39;1&#39;);
+session_set_cookie_params([
+    &#39;httponly&#39; =&gt; true,
+    &#39;samesite&#39; =&gt; &#39;Lax&#39;,
+    &#39;secure&#39; =&gt; isset($_SERVER[&#39;HTTPS&#39;]) &amp;&amp; $_SERVER[&#39;HTTPS&#39;] !== &#39;off&#39;,
+    &#39;path&#39; =&gt; &#39;/&#39;,
+]);
+session_start();
+require_once __DIR__ . &#39;/config.php&#39;;
+
+function auth_e(string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, &#39;UTF-8&#39;);
+}
+
+function auth_field(array $data, string $key): string {
+    return is_string($data[$key] ?? null) ? $data[$key] : &#39;&#39;;
+}
+
+function auth_csrf(): string {
+    if (!isset($_SESSION[&#39;auth_csrf&#39;]) || !is_string($_SESSION[&#39;auth_csrf&#39;])) {
+        $_SESSION[&#39;auth_csrf&#39;] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION[&#39;auth_csrf&#39;];
+}
+
+function auth_valid_csrf($token): bool {
+    return is_string($token) &amp;&amp; hash_equals(auth_csrf(), $token);
+}
+
+function auth_check_post(): void {
+    if ($_SERVER[&#39;REQUEST_METHOD&#39;] !== &#39;POST&#39;) {
+        header(&#39;Allow: POST&#39;);
+        http_response_code(405);
+        exit(&#39;Используйте форму с методом POST.&#39;);
+    }
+    if (!auth_valid_csrf($_POST[&#39;csrf&#39;] ?? null)) {
+        http_response_code(403);
+        exit(&#39;Токен формы устарел. Вернитесь на страницу, обновите её и повторите действие.&#39;);
+    }
+}
+</code></pre>
+            <!-- /example -->
+            <h3>Разбираем по частям</h3>
+            <ul>
+                <li>Настройки cookie и <code>session_start()</code> стоят до любого HTML.</li>
+                <li>
+                    <code>require_once</code> один раз подключает PDO из <code>config.php</code>.
+                </li>
+                <li><code>auth_e()</code> готовит строку для безопасного вывода в HTML.</li>
+                <li>
+                    <code>auth_field()</code> берёт только строку: вместо массива или отсутствующего
+                    поля возвращает <code>&#39;&#39;</code>.
+                </li>
+                <li>
+                    <code>auth_csrf()</code> создаёт токен один раз для сессии, затем возвращает
+                    существующий.
+                </li>
+                <li>
+                    <code>auth_valid_csrf()</code> сравнивает присланный токен с серверным через
+                    <code>hash_equals()</code>.
+                </li>
+                <li>
+                    <code>auth_check_post()</code> останавливает неправильный метод с 405,
+                    неправильный токен — с 403.
+                </li>
+            </ul>
+            <p>
+                Названия с <code>auth_</code> не конфликтуют с функцией <code>e()</code> из
+                лабораторной №6. Эти функции будем повторно использовать в следующих работах.
+            </p>
+            <p>
+                <strong>Маленькая проверка:</strong> откройте <code>bootstrap.php</code> через
+                сервер. Ожидается пустая страница без ошибок. Если видите ошибку PDO — сначала
+                исправьте подключение. Не добавляйте постоянный <code>echo</code>: он помешает
+                перенаправлениям.
+            </p>
+            <h2>Шаг 4. Создать обработчик регистрации</h2>
+            <p>
+                Файл <code>register.php</code> состоит из двух блоков.
+                <strong>Блок 1 из 2</strong> — обработчик, от <code>&lt;?php</code> до закрывающего
+                <code>?&gt;</code>:
+            </p>
+            <!-- example:register.php#server -->
+            <pre><code class="language-php">&lt;?php
+require_once __DIR__ . &#39;/bootstrap.php&#39;;
+$errors = [];
+$name = &#39;&#39;;
+$email = &#39;&#39;;
+$registered = isset($_GET[&#39;done&#39;]) &amp;&amp; $_GET[&#39;done&#39;] === &#39;1&#39;;
+
+if ($_SERVER[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {
+    auth_check_post();
+    $name = trim(auth_field($_POST, &#39;name&#39;));
+    $email = strtolower(trim(auth_field($_POST, &#39;email&#39;)));
+    $password = auth_field($_POST, &#39;password&#39;);
+    $confirmation = auth_field($_POST, &#39;confirmation&#39;);
+
+    if ($name === &#39;&#39; || mb_strlen($name, &#39;UTF-8&#39;) &gt; 80) {
+        $errors[] = &#39;Имя должно содержать от 1 до 80 символов.&#39;;
+    }
+    if (strlen($email) &gt; 191 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = &#39;Введите корректный email длиной не более 191 байта.&#39;;
+    }
+    if (strlen($password) &lt; 12 || strlen($password) &gt; 72 || strpos($password, &quot;\0&quot;) !== false) {
+        $errors[] = &#39;Пароль должен содержать от 12 до 72 байт без нулевого байта.&#39;;
+    }
+    if ($password !== $confirmation) {
+        $errors[] = &#39;Пароли не совпадают.&#39;;
+    }
+
+    if (!$errors) {
+        try {
+            $stmt = $pdo-&gt;prepare(
+                &quot;INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, &#39;user&#39;)&quot;
+            );
+            $stmt-&gt;execute([$name, $email, password_hash($password, PASSWORD_BCRYPT)]);
+            header(&#39;Location: register.php?done=1&#39;, true, 303);
+            exit;
+        } catch (PDOException $exception) {
+            if ((int) ($exception-&gt;errorInfo[1] ?? 0) === 1062) {
+                $errors[] = &#39;Этот email уже зарегистрирован.&#39;;
+            } else {
+                error_log((string) $exception);
+                http_response_code(500);
+                $errors[] = &#39;Не удалось создать пользователя. Проверьте журнал сервера.&#39;;
+            }
+        }
+    }
+}
+?&gt;
+</code></pre>
+            <!-- /example -->
+            <h3>Что проверить глазами</h3>
+            <p>
+                Сначала вызывается <code>auth_check_post()</code>, затем читаются поля. Имя и email
+                очищаются от внешних пробелов, пароль — нет. Пароль проверяется в байтах: от 12 до
+                72, без нулевого байта. Для имени считаем символы через <code>mb_strlen()</code>.
+            </p>
+            <p>
+                INSERT получает параметры, а роль <code>&#39;user&#39;</code> записана в SQL самим
+                разработчиком. Введённый пароль заменяется хешем. При конфликте уникального email
+                код MySQL 1062 превращается в понятную ошибку. Остальные ошибки базы не маскируем
+                под «email занят».
+            </p>
+            <p>
+                После успеха выполняется 303. Параметр <code>done=1</code> отвечает только за текст
+                уведомления: сам по себе он не доказывает наличие пользователя. Результат
+                регистрации проверяем в базе.
+            </p>
+            <h2>Шаг 5. Добавить форму</h2>
+            <p>
+                <strong>Блок 2 из 2</strong> — добавьте сразу после первого, не удаляя закрывающий
+                <code>?&gt;</code>:
+            </p>
+            <!-- example:register.php#html -->
+            <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Регистрация&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Регистрация&lt;/h1&gt;
+&lt;?php if ($registered): ?&gt;
+    &lt;p&gt;Регистрация завершена. Теперь можно войти в свою учётную запись.&lt;/p&gt;
+&lt;?php endif; ?&gt;
+&lt;?php foreach ($errors as $error): ?&gt;
+    &lt;p role=&quot;alert&quot;&gt;&lt;?= auth_e($error) ?&gt;&lt;/p&gt;
+&lt;?php endforeach; ?&gt;
+&lt;form method=&quot;post&quot; action=&quot;register.php&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;csrf&quot; value=&quot;&lt;?= auth_e(auth_csrf()) ?&gt;&quot;&gt;
+    &lt;p&gt;&lt;label&gt;Имя &lt;input name=&quot;name&quot; maxlength=&quot;80&quot; required autocomplete=&quot;name&quot; value=&quot;&lt;?= auth_e($name) ?&gt;&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Email &lt;input type=&quot;email&quot; name=&quot;email&quot; maxlength=&quot;191&quot; required autocomplete=&quot;email&quot; value=&quot;&lt;?= auth_e($email) ?&gt;&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;p id=&quot;password-hint&quot;&gt;Пароль: 12–72 байта. Латинская буква занимает один байт, русская обычно два. Для первой проверки используйте латинские буквы и цифры.&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Пароль &lt;input type=&quot;password&quot; name=&quot;password&quot; required autocomplete=&quot;new-password&quot; aria-describedby=&quot;password-hint&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;label&gt;Повтор пароля &lt;input type=&quot;password&quot; name=&quot;confirmation&quot; required autocomplete=&quot;new-password&quot;&gt;&lt;/label&gt;&lt;/p&gt;
+    &lt;button type=&quot;submit&quot;&gt;Создать учётную запись&lt;/button&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <!-- /example -->
+            <p>
+                В скрытом поле передаётся CSRF-токен. Имя и email после ошибки остаются, пароли
+                нужно ввести заново. HTML не должен содержать подставленного значения пароля.
+            </p>
+            <p>
+                <strong>Маленькая проверка:</strong> откройте <code>register.php</code>. Ожидайте
+                четыре поля и кнопку. Пока форму не отправили, таблица не меняется.
+            </p>
+            <h2>Шаг 6. Первая регистрация</h2>
+            <p>
+                Для локальной проверки используйте вымышленные данные: имя <code>Анна</code>, email
+                <code>anna@example.test</code>, пароль <code>StudyPass12345</code>, такой же повтор.
+                Этот пароль — только учебный пример.
+            </p>
+            <p>
+                Нажмите кнопку. Во вкладке Network увидите POST с ответом 303, затем GET
+                <code>register.php?done=1</code>. В таблице <code>users</code> появится одна строка.
+                Роль — <code>user</code>, поле <code>password_hash</code> содержит длинную строку, а
+                не <code>StudyPass12345</code>.
+            </p>
+            <p>
+                Нажмите F5: число строк не должно увеличиться. Повторите регистрацию с другим email
+                — это уже другая учётная запись.
+            </p>
+            <h2>Шаг 7. Проверки ошибок и подмен</h2>
+            <p>
+                Каждый опыт выполняйте на своей локальной копии. Для обхода браузерного
+                <code>required</code> можно временно убрать его в DevTools; сервер всё равно обязан
+                проверить ввод.
+            </p>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Действие</th>
+                            <th>Ожидаемый результат</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Зарегистрировать тот же email ещё раз</td>
+                            <td>Сообщение о занятом email, второй строки нет</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Использовать <code>ANNA@example.test</code> после
+                                <code>anna@example.test</code>
+                            </td>
+                            <td>Тот же конфликт по принятому правилу email</td>
+                        </tr>
+                        <tr>
+                            <td>Передать имя из пробелов</td>
+                            <td>Ошибка имени, INSERT не выполняется</td>
+                        </tr>
+                        <tr>
+                            <td>Указать пароль и другой повтор</td>
+                            <td>Ошибка совпадения</td>
+                        </tr>
+                        <tr>
+                            <td>Указать пароль из 11 латинских букв</td>
+                            <td>Ошибка длины</td>
+                        </tr>
+                        <tr>
+                            <td>Указать пароль из 73 латинских букв</td>
+                            <td>Ошибка длины, пароль не обрезается молча</td>
+                        </tr>
+                        <tr>
+                            <td>Удалить скрытое поле <code>csrf</code> и отправить форму</td>
+                            <td>HTTP 403, строка не добавлена</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Переименовать поле <code>email</code> в <code>email[]</code> через
+                                DevTools
+                            </td>
+                            <td>Ошибка email без падения PHP</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Добавить в форму скрытое поле <code>role</code> со значением
+                                <code>admin</code> и новый email
+                            </td>
+                            <td>Новый пользователь всё равно получает <code>user</code></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Ввести имя <code>&lt;b&gt;Анна&lt;/b&gt;</code> и вызвать ошибку
+                                повтора пароля
+                            </td>
+                            <td>В поле остаётся текст, тег не выполняется</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                После опыта с CSRF обновите страницу, чтобы восстановить форму. После ошибки
+                проверьте и сообщение, и число записей в базе.
+            </p>
+            <h2>Типичные ошибки</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Симптом</th>
+                            <th>Причина и действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Table ... users doesn&#39;t exist</code></td>
+                            <td>SQL выполнен не в той базе; сверить <code>dbname</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Call to undefined function mb_strlen()</code></td>
+                            <td>Включить <code>mbstring</code> в локальном PHP</td>
+                        </tr>
+                        <tr>
+                            <td><code>Headers already sent</code></td>
+                            <td>Убрать BOM, пробелы и отладочный вывод перед заголовками</td>
+                        </tr>
+                        <tr>
+                            <td><code>Cannot redeclare auth_e()</code></td>
+                            <td>
+                                Использовать <code>require_once</code>, не копировать функции в
+                                каждый файл
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Любая форма получает 403</td>
+                            <td>
+                                Проверить cookie, поле <code>csrf</code>, стабильность токена;
+                                обновить страницу
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Дубликат email создаётся</td>
+                            <td>
+                                Проверить реальный уникальный индекс, не только текст SQL в отчёте
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Самостоятельная работа</h2>
+            <ol>
+                <li>
+                    Добавьте пояснение рядом с полем email, что он будет использоваться для входа.
+                </li>
+                <li>
+                    Покажите число символов имени при ошибке, сохранив серверную проверку максимума.
+                </li>
+                <li>
+                    Со звёздочкой: повторите опыт одновременной регистрации одного email двумя
+                    запросами и объясните, почему <code>UNIQUE</code> остаётся необходимым.
+                </li>
+            </ol>
+            <h2>Что сдать и критерии</h2>
+            <p>
+                Сдайте <code>bootstrap.php</code>, <code>register.php</code>, обезличенный образец
+                подключения и SQL-структуру <code>users</code>. Приложите таблицу проверок «действие
+                → ожидание → факт», скриншоты успеха и ошибки. Не включайте реальные пароли, cookie
+                и CSRF-токены.
+            </p>
+            <p>
+                Работа выполнена, если пользователь создаётся с хешем и ролью <code>user</code>,
+                дубликаты запрещены базой, неправильный ввод не сохраняется, токен проверяется, а F5
+                после успеха не создаёт новую строку.
+            </p>
+            <h2>Вопросы для защиты</h2>
+            <ol>
+                <li>Почему не храним пароль в таблице открытым текстом?</li>
+                <li>Зачем <code>UNIQUE</code>, если есть проверки PHP?</li>
+                <li>Почему пароль не подставляется обратно в форму?</li>
+                <li>Какая проверка отклонит массив вместо email?</li>
+                <li>Почему посетитель не может назначить себе <code>admin</code>?</li>
+            </ol>
+            <p>
+                Теперь переходите к
+                <a
+                    href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_12_%D0%90%D1%83%D1%82%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D1%8F.html"
+                    >работе №12</a
+                >: регистрация останется прежней, добавятся вход и сессия пользователя.
+            </p>
+        </main>
+    </body>
+</html>

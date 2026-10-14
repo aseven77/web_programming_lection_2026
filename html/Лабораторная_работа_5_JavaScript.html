@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №5</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №5</h1>
+            <h2>Дисциплина: Web-программирование</h2>
+            <h2>Тема: Основы JavaScript</h2>
+            <hr />
+            <h2>Цель работы</h2>
+            <p>
+                Закрепить на практике основы JavaScript: работу с переменными, DOM-элементами,
+                событиями, методами массивов и запросами к серверу через <code>fetch</code>. Каждое
+                задание разбито на небольшие шаги — не просто копируйте код, а прочитайте пояснение
+                к каждому шагу и убедитесь, что понимаете, зачем он нужен.
+            </p>
+            <h2>Необходимые инструменты</h2>
+            <ul>
+                <li>Текстовый редактор или IDE (VS Code).</li>
+                <li>Браузер с инструментами разработчика (консоль, <code>F12</code>).</li>
+                <li>
+                    Локальный сервер (для последнего задания понадобится PHP-скрипт из предыдущих
+                    лабораторных работ, например <code>api.php</code>).
+                </li>
+            </ul>
+            <hr />
+            <h2>Задание 1. Переменные и вывод на страницу</h2>
+            <h3>Шаг 1.1 — создаём файлы</h3>
+            <p>
+                Создайте два файла в одной папке: <code>task1.html</code> и <code>task1.js</code>.
+            </p>
+            <p>
+                В <code>task1.html</code> пропишите минимальную структуру страницы и подключите
+                скрипт <strong>в конце <code>&lt;body&gt;</code></strong> — это важно, чтобы к
+                моменту выполнения JS-кода нужные элементы страницы уже существовали:
+            </p>
+            <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Задание 1&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;p id=&quot;output&quot;&gt;&lt;/p&gt;
+
+    &lt;script src=&quot;task1.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                Обратите внимание на пустой абзац
+                <code>&lt;p id=&quot;output&quot;&gt;&lt;/p&gt;</code> — именно в него мы позже
+                вставим текст с помощью JavaScript. Атрибут <code>id</code> — это «имя», по которому
+                JavaScript найдёт этот элемент.
+            </p>
+            <h3>Шаг 1.2 — объявляем переменные</h3>
+            <p>В файле <code>task1.js</code> объявите две переменные:</p>
+            <pre><code class="language-javascript">const name = &quot;Азамат&quot;;
+const group = &quot;41-ПИ&quot;;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> мы создаём две константы (<code>const</code>
+                означает, что значение переменной менять больше нельзя). Замените значения на свои.
+            </p>
+            <h3>Шаг 1.3 — собираем фразу через шаблонную строку</h3>
+            <p>Добавьте в <code>task1.js</code>:</p>
+            <pre><code class="language-javascript">const phrase = `Меня зовут ${name}, я учусь в группе ${group}`;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> обратные кавычки <code>`</code> создают «шаблонную
+                строку» — внутри неё можно подставлять значения переменных прямо в текст через
+                <code>${...}</code>. Результат — обычная строка:
+                <code>&quot;Меня зовут Азамат, я учусь в группе 41-ПИ&quot;</code>.
+            </p>
+            <h3>Шаг 1.4 — находим элемент на странице</h3>
+            <pre><code class="language-javascript">const output = document.getElementById(&quot;output&quot;);
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> <code>document</code> — это вся страница,
+                представленная как объект. Метод
+                <code>getElementById(&quot;output&quot;)</code> ищет на странице элемент с атрибутом
+                <code>id=&quot;output&quot;</code> — тот самый пустой абзац из Шага 1.1 — и
+                сохраняет ссылку на него в переменную <code>output</code>.
+            </p>
+            <h3>Шаг 1.5 — выводим текст на страницу</h3>
+            <pre><code class="language-javascript">output.textContent = phrase;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> свойство <code>textContent</code> — это текст
+                внутри элемента. Присваивая ему значение переменной <code>phrase</code>, мы заменяем
+                пустое содержимое абзаца на нашу фразу.
+            </p>
+            <h3>Шаг 1.6 — проверяем результат</h3>
+            <p>
+                Откройте <code>task1.html</code> в браузере. Вы должны увидеть на странице фразу с
+                вашим именем и группой. Если ничего не появилось — откройте консоль браузера (<code
+                    >F12</code
+                >
+                → вкладка Console) и проверьте, нет ли ошибки.
+            </p>
+            <hr />
+            <h2>Задание 2. Кнопка и обработчик события</h2>
+            <h3>Шаг 2.1 — размечаем страницу</h3>
+            <p>
+                Создайте <code>task2.html</code> и <code>task2.js</code>. В HTML добавьте кнопку и
+                элемент для вывода счётчика:
+            </p>
+            <pre><code class="language-html">&lt;button id=&quot;counterBtn&quot;&gt;Нажми меня&lt;/button&gt;
+&lt;p id=&quot;counter&quot;&gt;Нажатий: 0&lt;/p&gt;
+
+&lt;script src=&quot;task2.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+            <h3>Шаг 2.2 — заводим переменную-счётчик</h3>
+            <pre><code class="language-javascript">let count = 0;
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> мы объявляем переменную <code>count</code> через
+                <code>let</code> (а не <code>const</code>), потому что её значение будет меняться
+                при каждом нажатии на кнопку.
+            </p>
+            <h3>Шаг 2.3 — находим кнопку и элемент счётчика</h3>
+            <pre><code class="language-javascript">const button = document.getElementById(&quot;counterBtn&quot;);
+const counterText = document.getElementById(&quot;counter&quot;);
+</code></pre>
+            <h3>Шаг 2.4 — подписываемся на событие клика</h3>
+            <pre><code class="language-javascript">button.addEventListener(&quot;click&quot;, function () {
+    count = count + 1;
+    counterText.textContent = &quot;Нажатий: &quot; + count;
+});
+</code></pre>
+            <p><strong>Что это делает построчно:</strong></p>
+            <ul>
+                <li>
+                    <code>addEventListener(&quot;click&quot;, ...)</code> говорит браузеру: «когда
+                    пользователь кликнет по этой кнопке, выполни следующую функцию».
+                </li>
+                <li>
+                    Функция внутри <code>addEventListener</code> не выполняется сразу — она
+                    сработает только в момент клика.
+                </li>
+                <li>
+                    <code>count = count + 1</code> увеличивает счётчик на единицу при каждом клике.
+                </li>
+                <li>
+                    <code>counterText.textContent = ...</code> обновляет текст на странице новым
+                    значением счётчика.
+                </li>
+            </ul>
+            <h3>Шаг 2.5 — проверяем результат</h3>
+            <p>
+                Откройте <code>task2.html</code>, нажмите на кнопку несколько раз и убедитесь, что
+                число нажатий действительно увеличивается на странице.
+            </p>
+            <hr />
+            <h2>Задание 3. Массив новостей и методы <code>filter</code>/<code>map</code></h2>
+            <h3>Шаг 3.1 — готовим страницу</h3>
+            <p>
+                Создайте <code>task3.html</code> с пустым списком-контейнером и подключённым
+                скриптом:
+            </p>
+            <pre><code class="language-html">&lt;ul id=&quot;newsList&quot;&gt;&lt;/ul&gt;
+
+&lt;script src=&quot;task3.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+            <h3>Шаг 3.2 — объявляем массив новостей</h3>
+            <p>В <code>task3.js</code>:</p>
+            <pre><code class="language-javascript">const news = [
+    { title: &quot;Открылась новая библиотека&quot;, views: 120 },
+    { title: &quot;Итоги олимпиады по программированию&quot;, views: 340 },
+    { title: &quot;Расписание сессии обновлено&quot;, views: 980 },
+    { title: &quot;Встреча выпускников факультета&quot;, views: 75 },
+];
+</code></pre>
+            <p>
+                <strong>Что это такое:</strong> массив из четырёх объектов. У каждого объекта два
+                свойства — <code>title</code> (заголовок) и <code>views</code> (число просмотров),
+                как в предыдущих лекциях про PHP, только теперь на JavaScript.
+            </p>
+            <h3>Шаг 3.3 — отбираем популярные новости методом <code>filter</code></h3>
+            <pre><code class="language-javascript">const popularNews = news.filter(function (item) {
+    return item.views &gt; 200;
+});
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> <code>filter</code> проходит по каждому элементу
+                массива <code>news</code> и <strong>оставляет только те</strong>, для которых
+                функция внутри вернула <code>true</code>. Здесь мы оставляем новости, у которых
+                <code>views</code> больше 200. Результат — новый массив <code>popularNews</code>,
+                короче исходного.
+            </p>
+            <p>
+                Проверьте себя: выведите <code>popularNews</code> в консоль командой
+                <code>console.log(popularNews)</code> и посмотрите, сколько новостей осталось.
+            </p>
+            <h3>Шаг 3.4 — превращаем объекты в строки методом <code>map</code></h3>
+            <pre><code class="language-javascript">const newsStrings = popularNews.map(function (item) {
+    return item.title + &quot; (&quot; + item.views + &quot; просмотров)&quot;;
+});
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> <code>map</code> тоже проходит по каждому элементу
+                массива, но не отбирает, а <strong>преобразует</strong> каждый элемент во что-то
+                новое — в данном случае из объекта <code>{title, views}</code> получаем обычную
+                строку. Результат — новый массив строк, той же длины, что и
+                <code>popularNews</code>.
+            </p>
+            <h3>Шаг 3.5 — выводим список на страницу</h3>
+            <pre><code class="language-javascript">const list = document.getElementById(&quot;newsList&quot;);
+
+for (const text of newsStrings) {
+    const li = document.createElement(&quot;li&quot;);
+    li.textContent = text;
+    list.appendChild(li);
+}
+</code></pre>
+            <p><strong>Что это делает построчно:</strong></p>
+            <ul>
+                <li>
+                    <code>document.createElement(&quot;li&quot;)</code> создаёт новый, пока «пустой»
+                    и невидимый HTML-элемент <code>&lt;li&gt;</code>.
+                </li>
+                <li>
+                    <code>li.textContent = text</code> кладёт внутрь этого элемента нужный текст.
+                </li>
+                <li>
+                    <code>list.appendChild(li)</code> добавляет готовый элемент
+                    <code>&lt;li&gt;</code> внутрь списка
+                    <code>&lt;ul id=&quot;newsList&quot;&gt;</code> на странице — только после этого
+                    он становится видимым.
+                </li>
+                <li>
+                    Цикл <code>for...of</code> повторяет эти три действия для каждой строки из
+                    массива <code>newsStrings</code>.
+                </li>
+            </ul>
+            <h3>Шаг 3.6 — проверяем результат</h3>
+            <p>
+                Откройте <code>task3.html</code> — должен появиться список только из «популярных»
+                новостей (просмотров больше 200), в формате «Заголовок (число просмотров)».
+            </p>
+            <hr />
+            <h2>Задание 4. Загрузка данных с сервера через <code>fetch</code></h2>
+            <h3>Шаг 4.1 — размечаем страницу</h3>
+            <p>Создайте <code>task4.html</code>:</p>
+            <pre><code class="language-html">&lt;button id=&quot;loadBtn&quot;&gt;Загрузить данные&lt;/button&gt;
+&lt;div id=&quot;result&quot;&gt;&lt;/div&gt;
+
+&lt;script src=&quot;task4.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+            <h3>Шаг 4.2 — находим кнопку и контейнер результата</h3>
+            <pre><code class="language-javascript">const loadBtn = document.getElementById(&quot;loadBtn&quot;);
+const result = document.getElementById(&quot;result&quot;);
+</code></pre>
+            <h3>Шаг 4.3 — пишем асинхронную функцию загрузки данных</h3>
+            <pre><code class="language-javascript">async function loadData() {
+    try {
+        const response = await fetch(&quot;https://jsonplaceholder.typicode.com/posts&quot;);
+        const data = await response.json();
+
+        result.textContent = &quot;&quot;;
+
+        for (const post of data) {
+            const p = document.createElement(&quot;p&quot;);
+            p.textContent = post.title;
+            result.appendChild(p);
+        }
+
+    } catch (error) {
+        result.textContent = &quot;Не удалось загрузить данные&quot;;
+    }
+}
+</code></pre>
+            <p><strong>Что это делает построчно:</strong></p>
+            <ul>
+                <li>
+                    Слово <code>async</code> перед функцией разрешает использовать внутри неё
+                    <code>await</code> — «подожди, пока это действие закончится, прежде чем
+                    выполнять следующую строку».
+                </li>
+                <li>
+                    <code>fetch(...)</code> отправляет запрос к серверу — это долгая операция (нужно
+                    время, чтобы получить ответ по сети), поэтому мы пишем
+                    <code>await fetch(...)</code>, чтобы дождаться результата.
+                </li>
+                <li>
+                    <code>response.json()</code> тоже требует времени — он превращает «сырой» ответ
+                    сервера в обычный JavaScript-массив/объект, поэтому здесь тоже стоит
+                    <code>await</code>.
+                </li>
+                <li>
+                    <code>result.textContent = &quot;&quot;</code> очищает контейнер результата
+                    перед новой загрузкой — иначе при повторном нажатии кнопки новости будут
+                    добавляться друг под другом бесконечно.
+                </li>
+                <li>
+                    Цикл <code>for...of</code> перебирает полученные данные так же, как в Задании 3,
+                    и добавляет каждую запись на страницу отдельным абзацем <code>&lt;p&gt;</code>.
+                </li>
+                <li>
+                    Блок <code>try { ... } catch (error) { ... }</code>: код внутри
+                    <code>try</code> выполняется в обычном режиме, но если на любом шаге произойдёт
+                    ошибка (например, нет интернета или сервер недоступен) — вместо падения всего
+                    скрипта выполнится код внутри <code>catch</code>, и пользователь увидит понятное
+                    сообщение.
+                </li>
+            </ul>
+            <h3>Шаг 4.4 — вызываем функцию по клику на кнопку</h3>
+            <pre><code class="language-javascript">loadBtn.addEventListener(&quot;click&quot;, loadData);
+</code></pre>
+            <p>
+                <strong>Что это делает:</strong> мы говорим браузеру — «при клике на кнопку
+                <code>loadBtn</code> вызови функцию <code>loadData</code>», которую мы написали в
+                Шаге 4.3. Заметьте: здесь мы передаём саму функцию <code>loadData</code> (без
+                скобок), а не вызываем её сразу.
+            </p>
+            <h3>Шаг 4.5 — проверяем результат</h3>
+            <p>
+                Откройте <code>task4.html</code>, нажмите кнопку «Загрузить данные» — на странице
+                должны появиться заголовки нескольких тестовых постов. Попробуйте отключить интернет
+                и нажать кнопку ещё раз — должно появиться сообщение «Не удалось загрузить данные».
+            </p>
+            <h3>Шаг 4.6 (по желанию) — используем свой <code>api.php</code></h3>
+            <p>
+                Если у вас уже готов <code>api.php</code> из предыдущих лабораторных работ, замените
+                адрес в <code>fetch(...)</code> на адрес вашего локального скрипта, например:
+            </p>
+            <pre><code class="language-javascript">const response = await fetch(&quot;http://localhost/api.php&quot;);
+</code></pre>
+            <p>
+                и убедитесь, что данные с вашего собственного сервера так же успешно выводятся на
+                странице.
+            </p>
+            <hr />
+            <h2>Требования к оформлению отчёта</h2>
+            <p>
+                Отчёт оформляется в виде документа (<code>.docx</code> или <code>.pdf</code>) и
+                должен содержать:
+            </p>
+            <ol>
+                <li>Титульный лист: ФИО студента, группа, тема лабораторной работы.</li>
+                <li>Листинги кода всех <code>.js</code>-файлов.</li>
+                <li>Скриншоты результата работы каждого задания в браузере.</li>
+                <li>
+                    Краткий вывод по работе (2–3 предложения) — своими словами объясните, для чего
+                    нужен каждый из четырёх изученных инструментов: DOM, события,
+                    <code>filter</code>/<code>map</code>, <code>fetch</code>.
+                </li>
+            </ol>
+            <h2>Критерии оценки</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Критерий</th>
+                            <th>Баллы</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Задание 1 — переменные и вывод через DOM</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>Задание 2 — обработчик события, счётчик</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>Задание 3 — <code>filter</code>, <code>map</code>, вывод списка</td>
+                            <td>30</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Задание 4 — <code>fetch</code> с <code>async/await</code> и
+                                обработкой ошибки
+                            </td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td>Оформление отчёта</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Итого</strong></td>
+                            <td><strong>100</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2>Контрольные вопросы (для защиты работы)</h2>
+            <ol>
+                <li>Чем <code>textContent</code> отличается от <code>innerHTML</code>?</li>
+                <li>
+                    Что делает метод <code>addEventListener</code> и почему функция внутри него не
+                    выполняется сразу при загрузке страницы?
+                </li>
+                <li>Чем <code>filter</code> отличается от <code>map</code>?</li>
+                <li>
+                    Зачем перед <code>fetch</code> использовать <code>await</code>, а не просто
+                    вызывать функцию напрямую?
+                </li>
+                <li>Зачем нужен блок <code>try/catch</code> при работе с <code>fetch</code>?</li>
+                <li>
+                    Что произойдёт, если убрать строку
+                    <code>result.textContent = &quot;&quot;</code> перед циклом в Задании 4?
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

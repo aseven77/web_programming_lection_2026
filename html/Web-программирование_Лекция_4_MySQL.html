@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 4</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 4</h1>
+            <h2>MySQL: подключаем сайт к базе данных</h2>
+            <hr />
+            <h2>1. От массива в коде — к базе данных</h2>
+            <p>В прошлой лекции лента новостей хранилась прямо в PHP-коде:</p>
+            <pre><code class="language-php">&lt;?php
+$news = [
+    [&quot;title&quot; =&gt; &quot;Открылась новая библиотека&quot;, &quot;views&quot; =&gt; 120],
+    [&quot;title&quot; =&gt; &quot;Итоги олимпиады по программированию&quot;, &quot;views&quot; =&gt; 340],
+];
+</code></pre>
+            <p>
+                У такого подхода есть большая проблема: чтобы добавить новость, нужно вручную
+                редактировать код. Данные исчезают, если их явно не сохранить в файл. Несколько
+                человек не могут одновременно и безопасно их редактировать.
+            </p>
+            <p>
+                Решение — хранить данные в <strong>базе данных</strong>, а PHP-скрипт будет каждый
+                раз забирать из неё актуальный список и выводить его точно так же, как раньше
+                выводил обычный массив.
+            </p>
+            <hr />
+            <h2>2. MySQL и таблицы</h2>
+            <p>
+                <strong>MySQL</strong> — система управления базами данных (СУБД), которая хранит
+                данные в виде <strong>таблиц</strong>: строки — это записи (например, одна новость),
+                столбцы — поля записи (заголовок, текст, дата).
+            </p>
+            <p>Создадим таблицу для новостей:</p>
+            <pre><code class="language-sql">CREATE TABLE news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+</code></pre>
+            <p>И таблицу для контактов:</p>
+            <pre><code class="language-sql">CREATE TABLE contacts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    label VARCHAR(50) NOT NULL,
+    value VARCHAR(255) NOT NULL
+);
+</code></pre>
+            <p>
+                Здесь <code>label</code> — это название контакта («Телефон», «Email», «Адрес»), а
+                <code>value</code> — его значение.
+            </p>
+            <p>Добавим тестовые данные:</p>
+            <pre><code class="language-sql">INSERT INTO news (title, content) VALUES
+(&#39;Открылась новая библиотека&#39;, &#39;В университете открылась новая библиотека с читальным залом.&#39;),
+(&#39;Итоги олимпиады по программированию&#39;, &#39;Наши студенты заняли первое место в региональной олимпиаде.&#39;);
+
+INSERT INTO contacts (label, value) VALUES
+(&#39;Телефон&#39;, &#39;+7 (347) 123-45-67&#39;),
+(&#39;Email&#39;, &#39;info@example.ru&#39;),
+(&#39;Адрес&#39;, &#39;г. Уфа, ул. Университетская, 1&#39;);
+</code></pre>
+            <hr />
+            <h2>3. Подключение к базе данных из PHP</h2>
+            <p>
+                Для связи PHP с MySQL используется расширение <strong>PDO</strong>. Подключение
+                обычно выносят в отдельный файл, чтобы не дублировать код на каждой странице:
+            </p>
+            <pre><code class="language-php">&lt;?php
+// config.php
+$pdo = new PDO(
+    &quot;mysql:host=localhost;dbname=site;charset=utf8mb4&quot;,
+    &quot;root&quot;,
+    &quot;&quot;,
+    [PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION]
+);
+</code></pre>
+            <p>На любой странице сайта достаточно подключить этот файл:</p>
+            <pre><code class="language-php">&lt;?php
+require &quot;config.php&quot;;
+</code></pre>
+            <hr />
+            <h2>4. Читаем новости из базы данных</h2>
+            <p>
+                Раньше мы перебирали обычный PHP-массив циклом <code>foreach</code>. Теперь вместо
+                массива, объявленного вручную, мы получаем его <strong>из базы данных</strong> — а
+                сам цикл вывода остаётся точно таким же:
+            </p>
+            <pre><code class="language-php">&lt;?php
+require &quot;config.php&quot;;
+
+$stmt = $pdo-&gt;query(&quot;SELECT * FROM news ORDER BY created_at DESC&quot;);
+$news = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);
+</code></pre>
+            <pre><code class="language-php">&lt;ul&gt;
+    &lt;?php foreach ($news as $item): ?&gt;
+        &lt;li&gt;
+            &lt;strong&gt;&lt;?= htmlspecialchars($item[&quot;title&quot;]) ?&gt;&lt;/strong&gt;
+            &lt;p&gt;&lt;?= htmlspecialchars($item[&quot;content&quot;]) ?&gt;&lt;/p&gt;
+        &lt;/li&gt;
+    &lt;?php endforeach; ?&gt;
+&lt;/ul&gt;
+</code></pre>
+            <p>
+                Обратите внимание: мы снова используем <code>htmlspecialchars()</code>, чтобы данные
+                из базы безопасно выводились на странице, даже если в них случайно окажутся
+                специальные символы.
+            </p>
+            <hr />
+            <h2>5. Читаем контакты из базы данных</h2>
+            <p>Точно так же поступаем со страницей контактов:</p>
+            <pre><code class="language-php">&lt;?php
+require &quot;config.php&quot;;
+
+$stmt = $pdo-&gt;query(&quot;SELECT * FROM contacts&quot;);
+$contacts = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);
+</code></pre>
+            <pre><code class="language-php">&lt;ul&gt;
+    &lt;?php foreach ($contacts as $contact): ?&gt;
+        &lt;li&gt;&lt;strong&gt;&lt;?= htmlspecialchars($contact[&quot;label&quot;]) ?&gt;:&lt;/strong&gt; &lt;?= htmlspecialchars($contact[&quot;value&quot;]) ?&gt;&lt;/li&gt;
+    &lt;?php endforeach; ?&gt;
+&lt;/ul&gt;
+</code></pre>
+            <hr />
+            <h2>6. Один файл подключения — много страниц</h2>
+            <p>
+                Главная идея сегодняшней лекции: у сайта может быть сколько угодно страниц
+                (<code>index.php</code>, <code>news.php</code>, <code>contacts.php</code>), но
+                подключение к базе данных настраивается <strong>один раз</strong> в
+                <code>config.php</code> и переиспользуется везде. Меняется только SQL-запрос — под
+                то, какие данные нужны конкретной странице.
+            </p>
+            <pre><code>project/
+├── config.php     ← подключение к БД (один раз)
+├── index.php      ← главная страница
+├── news.php       ← новости из таблицы news
+└── contacts.php   ← контакты из таблицы contacts
+</code></pre>
+            <hr />
+            <h2>7. Итоги</h2>
+            <ol>
+                <li>
+                    Хранить данные в <strong>MySQL</strong> удобнее, чем прямо в коде: их можно
+                    редактировать без изменения PHP-файлов, и они не теряются при перезапуске
+                    сервера.
+                </li>
+                <li>
+                    Подключение к базе данных настраивается один раз через <strong>PDO</strong> и
+                    подключается на каждой странице сайта через <code>require</code>.
+                </li>
+                <li>
+                    Чтение данных из базы (<code>SELECT</code> + <code>fetchAll</code>) даёт точно
+                    такой же массив, с каким мы уже работали в цикле <code>foreach</code> — вывод на
+                    странице не меняется.
+                </li>
+                <li>
+                    Реальный сайт обычно состоит из нескольких PHP-страниц, использующих одно общее
+                    подключение к базе данных и разные SQL-запросы.
+                </li>
+                <li>
+                    Данные, полученные из базы, перед выводом на страницу всегда нужно обрабатывать
+                    функцией <code>htmlspecialchars()</code>.
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

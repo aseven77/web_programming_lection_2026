@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 7</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 7</h1>
+            <h2>JavaScript + PHP: работа с сервером без перезагрузки страницы</h2>
+            <hr />
+            <h2>1. От HTML-формы к API</h2>
+            <p>
+                В шестой лекции PHP после изменения новости перенаправлял браузер на страницу
+                списка. Теперь оставим страницу открытой: JavaScript отправит запрос, получит
+                результат и обновит нужные DOM-элементы.
+            </p>
+            <p>
+                Путь данных: <strong>событие в браузере → fetch → PHP → MySQL → JSON → DOM</strong>.
+                База остаётся на сервере; JavaScript не получает пароль MySQL и не отправляет
+                SQL-запросы напрямую.
+            </p>
+            <h2>2. Договор между клиентом и сервером</h2>
+            <p>
+                API — интерфейс взаимодействия программ. До написания кода нужно договориться об
+                адресах, методах, полях и ошибках. Для небольшого учебного проекта используем один
+                файл <code>api-news.php</code>:
+            </p>
+            <ul>
+                <li>
+                    <code>GET api-news.php</code> — получить список, ответ 200 и объект
+                    <code>{&quot;news&quot;: [...]}</code>.
+                </li>
+                <li>
+                    <code>POST api-news.php</code>, JSON с <code>action: &quot;create&quot;</code>,
+                    <code>title</code>, <code>content</code> — добавить запись, ответ 201 и объект
+                    <code>{&quot;item&quot;: {...}}</code>.
+                </li>
+                <li>
+                    <code>POST api-news.php</code>, JSON с <code>action: &quot;delete&quot;</code>,
+                    <code>id</code> — удалить запись, ответ 200 и объект
+                    <code>{&quot;deleted&quot;: 5}</code>.
+                </li>
+            </ul>
+            <p>
+                Это простой API с операциями в теле POST. В API, построенном вокруг ресурсов, часто
+                используют адрес <code>/news/5</code> и метод DELETE. Для нашей работы маршрутизатор
+                не требуется.
+            </p>
+            <p>
+                Ошибки имеют единый вид:
+                <code>{&quot;error&quot;: &quot;Введите заголовок и текст.&quot;}</code>. Код 400
+                обозначает некорректный запрос, 404 — отсутствие записи, 405 — неподдерживаемый
+                метод, 415 — неподдерживаемый формат тела, 422 — ошибку проверки полей, 500 —
+                внутреннюю ошибку сервера.
+            </p>
+            <h2>3. JSON и тело запроса</h2>
+            <p>
+                JSON описывает объекты, массивы, строки, числа, логические значения и
+                <code>null</code>. В JSON ключи и строки заключаются в двойные кавычки; комментарии
+                не допускаются.
+            </p>
+            <pre><code class="language-javascript">const payload = { action: &#39;create&#39;, title: &#39;Новая лекция&#39;, content: &#39;Изучаем API.&#39; };
+const body = JSON.stringify(payload);
+</code></pre>
+            <p>
+                <code>JSON.stringify()</code> превращает объект JavaScript в строку. PHP читает её
+                из <code>php://input</code>:
+            </p>
+            <pre><code class="language-php">$data = json_decode(file_get_contents(&#39;php://input&#39;), true, 512, JSON_THROW_ON_ERROR);
+</code></pre>
+            <p>
+                Параметр <code>true</code> превращает JSON-объекты в ассоциативные массивы PHP.
+                Ошибку разбора нужно перехватить через <code>catch (JsonException $e)</code>. При
+                <code>Content-Type: application/json</code> данные не появляются в
+                <code>$_POST</code>, как при обычной отправке формы.
+            </p>
+            <h2>4. Асинхронность и Promise</h2>
+            <p>
+                Запрос к серверу занимает время. <code>fetch()</code> возвращает
+                <strong>Promise</strong> — объект будущего результата. Во время ожидания браузер
+                может продолжать реагировать на действия пользователя.
+            </p>
+            <pre><code class="language-javascript">async function loadNews() {
+    const response = await fetch(&#39;api-news.php&#39;);
+    const data = await response.json();
+    return data.news;
+}
+</code></pre>
+            <p>
+                <code>async</code> делает функцию асинхронной: её результат тоже является Promise.
+                <code>await</code> приостанавливает выполнение этой функции до получения результата,
+                а не блокирует всю страницу. Первый <code>await</code> ждёт ответа, второй — чтения
+                тела и разбора JSON.
+            </p>
+            <h2>5. Почему одного catch недостаточно</h2>
+            <p>
+                <code>fetch()</code> обычно отклоняет Promise при сетевой ошибке, но HTTP-ответ 404
+                или 500 сам по себе не вызывает исключение. Нужно проверить
+                <code>response.ok</code>.
+            </p>
+            <pre><code class="language-javascript">async function request(options = {}) {
+    const response = await fetch(&#39;api-news.php&#39;, options);
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || `Ошибка HTTP ${response.status}`);
+    }
+    return data;
+}
+</code></pre>
+            <p>
+                Если сервер вместо JSON вернул HTML, ошибка возникнет при
+                <code>response.json()</code>. Поэтому API должен выдавать JSON и при неудаче.
+                Подробности ошибок PHP проверяют на сервере, а клиенту отправляют понятное
+                сообщение.
+            </p>
+            <h2>6. Перехват отправки формы</h2>
+            <pre><code class="language-javascript">form.addEventListener(&#39;submit&#39;, async (event) =&gt; {
+    event.preventDefault();
+    const data = new FormData(form);
+    try {
+        await request({
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({
+                action: &#39;create&#39;,
+                title: data.get(&#39;title&#39;),
+                content: data.get(&#39;content&#39;)
+            })
+        });
+        form.reset();
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+</code></pre>
+            <p>
+                Здесь <code>form</code> и <code>message</code> — заранее найденные DOM-элементы.
+                <code>preventDefault()</code> отменяет обычную отправку формы.
+                <code>FormData</code> читает именованные поля, а
+                <code>JSON.stringify()</code> подготавливает тело запроса. Очищаем форму только
+                после подтверждённого сохранения. Серверная проверка из шестой лекции по-прежнему
+                обязательна.
+            </p>
+            <h2>7. Обновление DOM</h2>
+            <p>Полученные данные нужно превратить в элементы страницы:</p>
+            <pre><code class="language-javascript">function renderNews(news, list) {
+    list.replaceChildren();
+    for (const item of news) {
+        const li = document.createElement(&#39;li&#39;);
+        const title = document.createElement(&#39;strong&#39;);
+        title.textContent = item.title;
+        li.append(title);
+        list.append(li);
+    }
+}
+</code></pre>
+            <p>
+                <code>textContent</code> вставляет текст. Не подставляйте пользовательские заголовки
+                в <code>innerHTML</code>: браузер может воспринять их как разметку. При пустом
+                массиве покажите «Новостей пока нет», чтобы пользователь отличал пустой список от
+                незавершённой загрузки.
+            </p>
+            <h2>8. Состояния интерфейса</h2>
+            <p>
+                У операции есть начало, успех и ошибка. На время запроса показываем сообщение и
+                отключаем кнопки; в <code>finally</code> обязательно возвращаем возможность
+                работать:
+            </p>
+            <pre><code class="language-javascript">try {
+    button.disabled = true;
+    message.textContent = &#39;Сохраняем…&#39;;
+    await saveNews(); // функция отправки, определённая в приложении
+    message.textContent = &#39;Новость сохранена.&#39;;
+} catch (error) {
+    message.textContent = error.message;
+} finally {
+    button.disabled = false;
+}
+</code></pre>
+            <p>
+                Блокировка уменьшает число случайных повторных отправок, но не заменяет серверные
+                гарантии. Если связь оборвалась после сохранения, клиент может не получить
+                подтверждение. Перед повторным добавлением стоит обновить список.
+            </p>
+            <p>
+                После успешного изменения можно повторно запросить весь список или обновить его
+                локально на основании ответа API. В лабораторной выберем второй вариант: успешное
+                сохранение не будет зависеть от дополнительного GET-запроса.
+            </p>
+            <h2>9. Отладка через Network</h2>
+            <p>
+                Откройте инструменты разработчика, вкладку Network, фильтр Fetch/XHR. Для запроса
+                проверьте адрес, HTTP-метод, статус, отправленное тело и ответ. Ошибка 422 указывает
+                на проверку данных; HTML вместо JSON часто означает неправильный адрес или ошибку
+                PHP.
+            </p>
+            <p>
+                HTML-страницу и API открываем через один локальный сайт: одинаковые схема, хост и
+                порт. Двойной щелчок по HTML открывает <code>file://</code>, где серверный PHP не
+                выполняется. Для этого проекта настройка CORS не нужна.
+            </p>
+            <h2>10. Итоги и вопросы</h2>
+            <ol>
+                <li>Чем JSON-ответ отличается от HTML-страницы?</li>
+                <li>Почему <code>$_POST</code> не содержит тело JSON-запроса?</li>
+                <li>Что ожидают два <code>await</code> при загрузке данных?</li>
+                <li>
+                    Почему после <code>fetch()</code> необходимо проверять <code>response.ok</code>?
+                </li>
+                <li>Зачем возвращать кнопкам доступность в <code>finally</code>?</li>
+                <li>Почему сервер должен проверять данные даже при проверках в JavaScript?</li>
+            </ol>
+            <p>
+                В лабораторной №7 объединим API, форму и динамический список в работающее
+                приложение.
+            </p>
+        </main>
+    </body>
+</html>

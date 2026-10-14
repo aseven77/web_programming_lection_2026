@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №4</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №4</h1>
+            <h2>Дисциплина: Web-программирование</h2>
+            <h2>Тема: Подключение сайта к базе данных MySQL</h2>
+            <hr />
+            <h2>Цель работы</h2>
+            <p>
+                Взять готовый статичный сайт из трёх страниц (Главная, Новости, Контакты) и
+                превратить его в динамический PHP-сайт, который хранит новости и контакты не в коде,
+                а в базе данных MySQL.
+            </p>
+            <h2>Необходимые инструменты</h2>
+            <ul>
+                <li>
+                    Локальный сервер с поддержкой PHP и MySQL: <strong>XAMPP</strong> или
+                    <strong>Open Server</strong>.
+                </li>
+                <li>
+                    phpMyAdmin (входит в состав XAMPP/Open Server) — для создания базы данных через
+                    интерфейс.
+                </li>
+                <li>Текстовый редактор или IDE (VS Code, PhpStorm).</li>
+                <li>Браузер.</li>
+            </ul>
+            <hr />
+            <h2>Этап 1. Готовим статичный сайт (HTML)</h2>
+            <p>
+                Если у вас ещё нет готового сайта из предыдущих занятий — создайте три простых
+                HTML-файла с общим меню-навигацией:
+            </p>
+            <ul>
+                <li><code>index.html</code> — главная страница с приветственным текстом.</li>
+                <li>
+                    <code>news.html</code> — страница со списком из 3–4 новостей, оформленных
+                    вручную прямо в HTML (заголовок + короткий текст каждой новости).
+                </li>
+                <li>
+                    <code>contacts.html</code> — страница с контактами (телефон, email, адрес),
+                    также прописанными вручную в HTML.
+                </li>
+            </ul>
+            <p>
+                На каждой странице должно быть одинаковое меню со ссылками на все три страницы.
+                Пример меню:
+            </p>
+            <pre><code class="language-html">&lt;nav&gt;
+    &lt;a href=&quot;index.html&quot;&gt;Главная&lt;/a&gt;
+    &lt;a href=&quot;news.html&quot;&gt;Новости&lt;/a&gt;
+    &lt;a href=&quot;contacts.html&quot;&gt;Контакты&lt;/a&gt;
+&lt;/nav&gt;
+</code></pre>
+            <p>Откройте сайт в браузере и убедитесь, что переключение между страницами работает.</p>
+            <hr />
+            <h2>Этап 2. Создаём базу данных</h2>
+            <ol>
+                <li>
+                    Откройте phpMyAdmin и создайте новую базу данных с именем <code>site</code>.
+                </li>
+                <li>Внутри базы данных выполните SQL-запрос для создания таблицы новостей:</li>
+            </ol>
+            <pre><code class="language-sql">CREATE TABLE news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+</code></pre>
+            <ol start="3">
+                <li>Создайте таблицу контактов:</li>
+            </ol>
+            <pre><code class="language-sql">CREATE TABLE contacts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    label VARCHAR(50) NOT NULL,
+    value VARCHAR(255) NOT NULL
+);
+</code></pre>
+            <ol start="4">
+                <li>
+                    Заполните обе таблицы своими данными (минимум 4 новости и 3 контакта) — либо
+                    через SQL-запросы <code>INSERT</code>, либо вручную через интерфейс phpMyAdmin
+                    (вкладка «Вставить»).
+                </li>
+            </ol>
+            <p>
+                <strong
+                    >Приложите к отчёту скриншот структуры обеих таблиц и их содержимого из
+                    phpMyAdmin.</strong
+                >
+            </p>
+            <hr />
+            <h2>Этап 3. Подключение к базе данных</h2>
+            <ol>
+                <li>
+                    Переименуйте все три файла сайта: <code>index.html</code> →
+                    <code>index.php</code>, <code>news.html</code> → <code>news.php</code>,
+                    <code>contacts.html</code> → <code>contacts.php</code>.
+                </li>
+                <li>
+                    Создайте файл <code>config.php</code> с подключением к базе данных через PDO:
+                </li>
+            </ol>
+            <pre><code class="language-php">&lt;?php
+$pdo = new PDO(
+    &quot;mysql:host=localhost;dbname=site;charset=utf8mb4&quot;,
+    &quot;root&quot;,
+    &quot;&quot;,
+    [PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION]
+);
+</code></pre>
+            <ol start="3">
+                <li>
+                    В начале каждого из трёх <code>.php</code>-файлов подключите
+                    <code>config.php</code>:
+                </li>
+            </ol>
+            <pre><code class="language-php">&lt;?php require &quot;config.php&quot;; ?&gt;
+</code></pre>
+            <hr />
+            <h2>Этап 4. Страница «Новости» — вывод из базы данных</h2>
+            <ol>
+                <li>
+                    В <code>news.php</code> замените новости, прописанные вручную в HTML, на код,
+                    который получает их из базы данных:
+                </li>
+            </ol>
+            <pre><code class="language-php">&lt;?php
+require &quot;config.php&quot;;
+$stmt = $pdo-&gt;query(&quot;SELECT * FROM news ORDER BY created_at DESC&quot;);
+$news = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);
+?&gt;
+</code></pre>
+            <ol start="2">
+                <li>
+                    Выведите список новостей циклом <code>foreach</code>, используя
+                    <code>htmlspecialchars()</code> для безопасного вывода:
+                </li>
+            </ol>
+            <pre><code class="language-php">&lt;?php foreach ($news as $item): ?&gt;
+    &lt;div class=&quot;news-item&quot;&gt;
+        &lt;h3&gt;&lt;?= htmlspecialchars($item[&quot;title&quot;]) ?&gt;&lt;/h3&gt;
+        &lt;p&gt;&lt;?= htmlspecialchars($item[&quot;content&quot;]) ?&gt;&lt;/p&gt;
+    &lt;/div&gt;
+&lt;?php endforeach; ?&gt;
+</code></pre>
+            <ol start="3">
+                <li>
+                    Проверьте страницу в браузере — новости должны отображаться так же, как раньше,
+                    но теперь их источник — база данных.
+                </li>
+            </ol>
+            <hr />
+            <h2>Этап 5. Страница «Контакты» — вывод из базы данных</h2>
+            <p>
+                Аналогично Этапу 4, замените контакты, прописанные вручную в
+                <code>contacts.php</code>, на данные из таблицы <code>contacts</code>:
+            </p>
+            <pre><code class="language-php">&lt;?php
+require &quot;config.php&quot;;
+$stmt = $pdo-&gt;query(&quot;SELECT * FROM contacts&quot;);
+$contacts = $stmt-&gt;fetchAll(PDO::FETCH_ASSOC);
+?&gt;
+
+&lt;ul&gt;
+    &lt;?php foreach ($contacts as $contact): ?&gt;
+        &lt;li&gt;&lt;strong&gt;&lt;?= htmlspecialchars($contact[&quot;label&quot;]) ?&gt;:&lt;/strong&gt; &lt;?= htmlspecialchars($contact[&quot;value&quot;]) ?&gt;&lt;/li&gt;
+    &lt;?php endforeach; ?&gt;
+&lt;/ul&gt;
+</code></pre>
+            <hr />
+            <h2>Этап 6. Проверка результата</h2>
+            <ol>
+                <li>
+                    Добавьте через phpMyAdmin ещё одну новость в таблицу <code>news</code>, не
+                    трогая PHP-код сайта.
+                </li>
+                <li>
+                    Обновите страницу <code>news.php</code> в браузере и убедитесь, что новая
+                    новость появилась автоматически — без изменения кода.
+                </li>
+                <li>
+                    Сделайте то же самое с одним контактом в таблице <code>contacts</code> и
+                    проверьте <code>contacts.php</code>.
+                </li>
+            </ol>
+            <p>
+                <strong
+                    >Приложите к отчёту скриншоты страниц <code>news.php</code> и
+                    <code>contacts.php</code> до и после добавления новых данных через
+                    phpMyAdmin.</strong
+                >
+            </p>
+            <hr />
+            <h2>Задание со звёздочкой (необязательное)</h2>
+            <p>
+                На главной странице <code>index.php</code> выведите
+                <strong>3 последние новости</strong> (используйте в SQL-запросе
+                <code>ORDER BY created_at DESC LIMIT 3</code>) в виде короткого анонса — так часто
+                устроена главная страница настоящих сайтов.
+            </p>
+            <hr />
+            <h2>Требования к оформлению отчёта</h2>
+            <p>
+                Отчёт оформляется в виде документа (<code>.docx</code> или <code>.pdf</code>) и
+                должен содержать:
+            </p>
+            <ol>
+                <li>Титульный лист: ФИО студента, группа, тема лабораторной работы.</li>
+                <li>
+                    Скриншот структуры и содержимого таблиц <code>news</code> и
+                    <code>contacts</code> из phpMyAdmin.
+                </li>
+                <li>
+                    Листинги кода <code>config.php</code>, <code>news.php</code>,
+                    <code>contacts.php</code>.
+                </li>
+                <li>
+                    Скриншоты страниц <code>news.php</code> и <code>contacts.php</code> до и после
+                    добавления новых данных через базу данных.
+                </li>
+                <li>Краткий вывод по работе (2–3 предложения).</li>
+            </ol>
+            <p>
+                Также к отчёту прикладывается архив с исходными файлами сайта
+                (<code>.php</code>-файлы и файл экспорта базы данных <code>.sql</code> из
+                phpMyAdmin).
+            </p>
+            <h2>Контрольные вопросы (для защиты работы)</h2>
+            <ol>
+                <li>
+                    Зачем подключение к базе данных выносят в отдельный файл
+                    <code>config.php</code>?
+                </li>
+                <li>Что делает метод <code>fetchAll(PDO::FETCH_ASSOC)</code>?</li>
+                <li>
+                    Почему после добавления новости через phpMyAdmin не нужно менять код
+                    <code>news.php</code>?
+                </li>
+                <li>
+                    Зачем при выводе данных из базы использовать <code>htmlspecialchars()</code>?
+                </li>
+                <li>
+                    Чем отличается статичный HTML-сайт от такого же сайта на PHP с базой данных?
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 6</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 6</h1>
+            <h2>Формы и CRUD: управление данными на PHP и MySQL</h2>
+            <hr />
+            <h2>1. От просмотра новостей к управлению сайтом</h2>
+            <p>
+                В четвёртой лекции мы читали новости из таблицы <code>news</code>. Теперь посетитель
+                учебной страницы сможет добавить новость, исправить её текст и удалить ненужную
+                запись. Сохраним знакомые поля: <code>id</code>, <code>title</code>,
+                <code>content</code>, <code>created_at</code>.
+            </p>
+            <p>Четыре основные операции с данными называют <strong>CRUD</strong>:</p>
+            <ul>
+                <li>Create — создать запись, SQL-команда <code>INSERT</code>.</li>
+                <li>Read — прочитать записи, команда <code>SELECT</code>.</li>
+                <li>Update — изменить запись, команда <code>UPDATE</code>.</li>
+                <li>Delete — удалить запись, команда <code>DELETE</code>.</li>
+            </ul>
+            <p>
+                Обычная HTML-форма работает без JavaScript: браузер отправляет запрос, PHP
+                обрабатывает данные, а браузер получает следующую страницу.
+            </p>
+            <h2>2. Как форма передаёт данные</h2>
+            <pre><code class="language-html">&lt;form action=&quot;admin.php&quot; method=&quot;post&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;action&quot; value=&quot;create&quot;&gt;
+    &lt;label&gt;Заголовок &lt;input name=&quot;title&quot; maxlength=&quot;255&quot; required&gt;&lt;/label&gt;
+    &lt;label&gt;Текст &lt;textarea name=&quot;content&quot; required&gt;&lt;/textarea&gt;&lt;/label&gt;
+    &lt;button type=&quot;submit&quot;&gt;Добавить&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+            <p>
+                <code>action</code> у формы задаёт адрес обработчика. Атрибут
+                <code>name</code> задаёт ключ передаваемого поля. Без него значение элемента не
+                попадёт в обычную отправку формы. Скрытое поле <code>action</code> внутри формы —
+                наше собственное обозначение операции, которое PHP прочитает из <code>$_POST</code>.
+            </p>
+            <p>
+                <strong>GET</strong> используем для просмотра: например,
+                <code>admin.php?edit=5</code> открывает форму новости №5.
+                <strong>POST</strong> используем для изменения данных. Сам по себе POST не шифрует
+                данные и не проверяет права пользователя.
+            </p>
+            <h2>3. Серверная проверка данных</h2>
+            <p>
+                <code>required</code> помогает пользователю, но запрос можно отправить в обход
+                браузерной формы. Поэтому PHP обязан повторить проверку.
+            </p>
+            <pre><code class="language-php">&lt;?php
+$title = is_string($_POST[&#39;title&#39;] ?? null) ? trim($_POST[&#39;title&#39;]) : &#39;&#39;;
+$content = is_string($_POST[&#39;content&#39;] ?? null) ? trim($_POST[&#39;content&#39;]) : &#39;&#39;;
+$errors = [];
+if ($title === &#39;&#39;) {
+    $errors[] = &#39;Введите заголовок.&#39;;
+} elseif (mb_strlen($title, &#39;UTF-8&#39;) &gt; 255) {
+    $errors[] = &#39;Заголовок должен содержать не более 255 символов.&#39;;
+}
+if ($content === &#39;&#39;) {
+    $errors[] = &#39;Введите текст новости.&#39;;
+}
+</code></pre>
+            <p>
+                <code>trim()</code> удаляет пробелы по краям, поэтому строка из одних пробелов
+                считается пустой. <code>is_string()</code> защищает от неожиданного массива вместо
+                строки. Для <code>mb_strlen()</code> необходимо расширение PHP
+                <code>mbstring</code>: оно считает символы UTF-8, а не байты.
+            </p>
+            <p>
+                При ошибке возвращаем страницу с сообщением и уже введёнными значениями. SQL-запрос
+                выполняем только после успешной проверки.
+            </p>
+            <h2>4. Подготовленные запросы PDO</h2>
+            <p>
+                Нельзя склеивать пользовательский ввод с SQL. Вместо этого текст запроса и значения
+                передаются отдельно:
+            </p>
+            <pre><code class="language-php">$stmt = $pdo-&gt;prepare(&#39;INSERT INTO news (title, content) VALUES (?, ?)&#39;);
+$stmt-&gt;execute([$title, $content]);
+</code></pre>
+            <p>
+                Знаки <code>?</code> — места для значений. Порядок элементов в
+                <code>execute()</code> совпадает с порядком знаков вопроса. Кавычки вокруг
+                <code>?</code> не нужны. Параметрами можно передавать значения, но не названия
+                таблиц или столбцов.
+            </p>
+            <p>
+                Подготовленные запросы решают задачу безопасной передачи значений в SQL. Проверка
+                длины и обязательности полей остаётся отдельной задачей.
+            </p>
+            <h2>5. Чтение записи для редактирования</h2>
+            <p>Сначала проверяем идентификатор, затем запрашиваем запись:</p>
+            <pre><code class="language-php">$id = filter_var($_GET[&#39;edit&#39;] ?? null, FILTER_VALIDATE_INT,
+    [&#39;options&#39; =&gt; [&#39;min_range&#39; =&gt; 1]]);
+if ($id === false || $id === null) {
+    http_response_code(400);
+    exit(&#39;Некорректный идентификатор.&#39;);
+}
+$stmt = $pdo-&gt;prepare(&#39;SELECT id, title, content FROM news WHERE id = ?&#39;);
+$stmt-&gt;execute([$id]);
+$item = $stmt-&gt;fetch(PDO::FETCH_ASSOC);
+if (!$item) {
+    http_response_code(404);
+    exit(&#39;Новость не найдена.&#39;);
+}
+</code></pre>
+            <p>
+                Положительный числовой идентификатор ещё не гарантирует, что запись существует.
+                Поэтому проверяем результат <code>fetch()</code>.
+            </p>
+            <p>
+                В форму помещаем текущие значения и скрытый <code>id</code>. Скрытое поле
+                пользователь тоже может изменить — ему нельзя доверять без проверки.
+            </p>
+            <h2>6. Обновление и удаление</h2>
+            <p>После проверки идентификатора и содержимого выполняем обновление:</p>
+            <pre><code class="language-php">$stmt = $pdo-&gt;prepare(&#39;UPDATE news SET title = ?, content = ? WHERE id = ?&#39;);
+$stmt-&gt;execute([$title, $content, $id]);
+</code></pre>
+            <p>Удаление выполняется отдельной POST-формой:</p>
+            <pre><code class="language-php">$stmt = $pdo-&gt;prepare(&#39;DELETE FROM news WHERE id = ?&#39;);
+$stmt-&gt;execute([$id]);
+</code></pre>
+            <p>
+                Условие <strong>WHERE</strong> определяет, какую запись нужно изменить. Без него
+                <code>UPDATE</code> или <code>DELETE</code> затронет все строки таблицы. Ссылка вида
+                <code>delete.php?id=5</code> не должна удалять запись по GET: открытие ссылки должно
+                оставаться операцией чтения.
+            </p>
+            <p>
+                Нулевой <code>rowCount()</code> после <code>UPDATE</code> не всегда означает
+                отсутствие записи: пользователь мог сохранить прежние значения. Не используйте этот
+                результат как единственную проверку существования новости.
+            </p>
+            <h2>7. Безопасный вывод в HTML</h2>
+            <p>
+                Данные в базе храним как текст. При вставке в HTML экранируем специальные символы:
+            </p>
+            <pre><code class="language-php">function e(string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, &#39;UTF-8&#39;);
+}
+</code></pre>
+            <pre><code class="language-html">&lt;input name=&quot;title&quot; value=&quot;&lt;?= e($title) ?&gt;&quot;&gt;
+&lt;textarea name=&quot;content&quot;&gt;&lt;?= e($content) ?&gt;&lt;/textarea&gt;
+</code></pre>
+            <p>
+                Так строка <code>&lt;b&gt;Новость&lt;/b&gt;</code> будет показана как текст.
+                <code>htmlspecialchars()</code> применяется при выводе в HTML, а подготовленные
+                запросы — при работе с SQL. Это разные задачи.
+            </p>
+            <h2>8. Перенаправление после POST</h2>
+            <p>После успешного сохранения отправляем браузер на страницу списка:</p>
+            <pre><code class="language-php">header(&#39;Location: admin.php&#39;, true, 303);
+exit;
+</code></pre>
+            <p>
+                Это схема <strong>Post/Redirect/Get</strong>: POST изменяет данные, ответ 303
+                направляет браузер выполнить GET. Обновление итоговой страницы повторит чтение, а не
+                добавление записи. При ошибке проверки перенаправление не нужно: показываем ту же
+                форму с подсказками.
+            </p>
+            <p>
+                <code>header()</code> вызывается до HTML и любого другого вывода.
+                <code>exit</code> завершает обработчик, чтобы последующий код не продолжил
+                выполняться.
+            </p>
+            <h2>9. Границы учебного примера</h2>
+            <p>
+                В лабораторной мы создадим локальную страницу управления без системы пользователей.
+                Публикация такой страницы требует аутентификации, проверки прав на сервере и защиты
+                изменяющих запросов от CSRF. POST и скрытое поле <code>id</code> сами по себе этих
+                задач не решают.
+            </p>
+            <h2>10. Итоги и вопросы</h2>
+            <p>
+                Мы связали HTML-форму, серверную проверку и SQL-запрос. PHP отвечает за
+                достоверность данных, PDO передаёт значения в базу, а браузер показывает результат.
+            </p>
+            <ol>
+                <li>Чем создание записи отличается от её обновления?</li>
+                <li>Почему нельзя ограничиться атрибутом <code>required</code>?</li>
+                <li>Что произойдёт при удалении без <code>WHERE</code>?</li>
+                <li>Чем параметры PDO отличаются от экранирования HTML?</li>
+                <li>Почему после сохранения выполняется перенаправление?</li>
+            </ol>
+        </main>
+    </body>
+</html>

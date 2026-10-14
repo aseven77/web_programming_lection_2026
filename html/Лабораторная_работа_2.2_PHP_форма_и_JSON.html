@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №2 (часть 2)</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Лабораторная работа №2 (часть 2)</h1>
+            <h2>Дисциплина: Web-программирование</h2>
+            <h2>Тема: PHP — обработка формы и вывод JSON</h2>
+            <hr />
+            <h2>Цель работы</h2>
+            <p>
+                Научиться получать данные, отправленные пользователем через форму, и возвращать
+                данные в формате JSON — как это делает простой backend для веб-приложения.
+            </p>
+            <h2>Необходимые инструменты</h2>
+            <ul>
+                <li>
+                    Локальный сервер с поддержкой PHP: <strong>XAMPP</strong>,
+                    <strong>Open Server</strong> или встроенный сервер PHP (<code
+                        >php -S localhost:8000</code
+                    >).
+                </li>
+                <li>Текстовый редактор или IDE (VS Code, PhpStorm).</li>
+                <li>Браузер.</li>
+            </ul>
+            <hr />
+            <h2>Задание 1. Форма и обработка данных</h2>
+            <ol>
+                <li>
+                    Создайте файл <code>form.html</code> с формой из одного текстового поля
+                    <code>name</code> и кнопки отправки. Метод — <code>POST</code>, действие —
+                    <code>process.php</code>.
+                </li>
+                <li>
+                    Создайте файл <code>process.php</code>, который:
+                    <ul>
+                        <li>получает значение поля <code>name</code> из <code>$_POST</code>;</li>
+                        <li>
+                            выводит на страницу приветствие вида: <em>«Здравствуйте, Азамат!»</em>.
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    Добавьте функцию <code>htmlspecialchars()</code> при выводе значения
+                    <code>name</code> — это защищает страницу от подстановки постороннего
+                    HTML/JS-кода пользователем.
+                </li>
+            </ol>
+            <p>
+                <strong>Проверка:</strong> введите в поле <code>name</code> текст
+                <code>&lt;b&gt;тест&lt;/b&gt;</code> и убедитесь, что на странице он выводится как
+                обычный текст, а не как жирный шрифт.
+            </p>
+            <hr />
+            <h2>Задание 2. Простой вывод данных в формате JSON</h2>
+            <ol>
+                <li>Создайте файл <code>api.php</code>.</li>
+                <li>
+                    Заведите ассоциативный массив с данными об одном «товаре»: <code>name</code>,
+                    <code>price</code>.
+                </li>
+                <li>
+                    Установите заголовок ответа:
+                    <pre><code class="language-php">header(&quot;Content-Type: application/json; charset=utf-8&quot;);
+</code></pre>
+                </li>
+                <li>Выведите массив в формате JSON функцией <code>json_encode()</code>.</li>
+                <li>
+                    Откройте <code>api.php</code> в браузере и убедитесь, что страница показывает
+                    корректный JSON, например:
+                    <pre><code class="language-json">{&quot;name&quot;:&quot;Клавиатура&quot;,&quot;price&quot;:1500}
+</code></pre>
+                </li>
+            </ol>
+            <hr />
+            <h2>Требования к оформлению отчёта</h2>
+            <p>
+                Отчёт оформляется в виде документа (<code>.docx</code> или <code>.pdf</code>) и
+                должен содержать:
+            </p>
+            <ol>
+                <li>Титульный лист: ФИО студента, группа, тема лабораторной работы.</li>
+                <li>
+                    Листинги кода всех файлов (<code>form.html</code>, <code>process.php</code>,
+                    <code>api.php</code>).
+                </li>
+                <li>Скриншоты результата работы каждого задания в браузере.</li>
+                <li>Краткий вывод по работе (2–3 предложения).</li>
+            </ol>
+            <h2>Контрольные вопросы (для защиты работы)</h2>
+            <ol>
+                <li>Как получить данные, отправленные из формы методом POST?</li>
+                <li>Зачем нужна функция <code>htmlspecialchars()</code>?</li>
+                <li>
+                    Какой заголовок нужно установить, чтобы браузер понял, что ответ — это JSON?
+                </li>
+                <li>Какая функция PHP превращает массив в строку JSON?</li>
+            </ol>
+        </main>
+    </body>
+</html>

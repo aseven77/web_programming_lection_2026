@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Web-программирование. Лекция 5</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+            <h1>Web-программирование. Лекция 5</h1>
+            <h2>Основы JavaScript</h2>
+            <hr />
+            <h2>1. Зачем нужен JavaScript</h2>
+            <p>
+                В отличие от PHP, который выполняется <strong>на сервере</strong> и клиенту
+                отправляет уже готовый результат, <strong>JavaScript</strong> — это язык, который
+                выполняется <strong>прямо в браузере пользователя</strong>. Именно JavaScript
+                отвечает за интерактивность страницы: реакцию на клики, изменение содержимого без
+                перезагрузки, отправку запросов к серверу в фоне.
+            </p>
+            <p>Три языка, которые вместе составляют классический фронтенд:</p>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Технология</th>
+                            <th>Отвечает за</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>HTML</strong></td>
+                            <td>Структуру и содержимое страницы</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CSS</strong></td>
+                            <td>Внешний вид: цвета, шрифты, расположение элементов</td>
+                        </tr>
+                        <tr>
+                            <td><strong>JavaScript</strong></td>
+                            <td>Поведение: реакцию на действия пользователя, динамику</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                Сегодня JavaScript — не только язык браузера: на нём же пишут серверную часть
+                приложений (<strong>Node.js</strong>), мобильные приложения (React Native) и
+                настольные программы (Electron). Но в этой лекции мы сосредоточимся на его
+                классическом применении — работе в браузере.
+            </p>
+            <hr />
+            <h2>2. Подключение JavaScript к странице</h2>
+            <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Пример JS-страницы&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1 id=&quot;title&quot;&gt;Привет!&lt;/h1&gt;
+
+    &lt;script&gt;
+        console.log(&quot;Скрипт загрузился&quot;);
+    &lt;/script&gt;
+
+    &lt;!-- Или подключение внешнего файла --&gt;
+    &lt;script src=&quot;script.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            <p>
+                Тег <code>&lt;script&gt;</code> с подключением внешнего файла принято размещать
+                перед закрывающим тегом <code>&lt;/body&gt;</code>, чтобы скрипт выполнялся уже
+                после того, как браузер построил всю разметку страницы.
+            </p>
+            <hr />
+            <h2>3. Переменные и типы данных</h2>
+            <p>
+                Современный JavaScript использует ключевые слова <code>let</code> и
+                <code>const</code> для объявления переменных (устаревшее <code>var</code> в новом
+                коде использовать не рекомендуется):
+            </p>
+            <pre><code class="language-javascript">let age = 25;          // переменная, значение можно изменить
+const name = &quot;Азамат&quot;; // константа, значение менять нельзя
+
+age = 26; // допустимо
+// name = &quot;Иван&quot;; // ошибка!
+</code></pre>
+            <h3>Основные типы данных</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Тип</th>
+                            <th>Пример</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Number</code></td>
+                            <td><code>42</code>, <code>3.14</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>String</code></td>
+                            <td>
+                                <code>&quot;Привет&quot;</code>, <code>`шаблонная строка`</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>Boolean</code></td>
+                            <td><code>true</code>, <code>false</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Array</code></td>
+                            <td><code>[1, 2, 3]</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Object</code></td>
+                            <td><code>{ name: &quot;Азамат&quot;, age: 30 }</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>null</code> / <code>undefined</code></td>
+                            <td>отсутствие значения</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Проверить тип значения можно оператором <code>typeof</code>:</p>
+            <pre><code class="language-javascript">console.log(typeof 42);        // &quot;number&quot;
+console.log(typeof &quot;текст&quot;);   // &quot;string&quot;
+console.log(typeof true);      // &quot;boolean&quot;
+</code></pre>
+            <h3>Шаблонные строки</h3>
+            <p>
+                Вместо конкатенации через <code>+</code> современный JavaScript использует
+                <strong>шаблонные строки</strong> (template literals) с обратными кавычками:
+            </p>
+            <pre><code class="language-javascript">const name = &quot;Азамат&quot;;
+const age = 30;
+
+console.log(`Меня зовут ${name}, мне ${age} лет`);
+</code></pre>
+            <hr />
+            <h2>4. Операторы, условия, циклы</h2>
+            <pre><code class="language-javascript">// Сравнение: используйте строгое сравнение ===
+console.log(5 === &quot;5&quot;);   // false — сравнивает и тип, и значение
+console.log(5 == &quot;5&quot;);    // true  — сравнивает только значение
+
+// Условие
+const age = 20;
+
+if (age &gt;= 18) {
+    console.log(&quot;Совершеннолетний&quot;);
+} else if (age &gt;= 14) {
+    console.log(&quot;Подросток&quot;);
+} else {
+    console.log(&quot;Ребёнок&quot;);
+}
+
+// Цикл for
+for (let i = 0; i &lt; 5; i++) {
+    console.log(i);
+}
+
+// Цикл for...of — удобен для перебора массивов
+const fruits = [&quot;яблоко&quot;, &quot;банан&quot;, &quot;груша&quot;];
+for (const fruit of fruits) {
+    console.log(fruit);
+}
+</code></pre>
+            <hr />
+            <h2>5. Функции</h2>
+            <pre><code class="language-javascript">// Классическое объявление функции
+function greet(name) {
+    return `Здравствуйте, ${name}!`;
+}
+
+// Стрелочная функция (arrow function) — современный, короткий синтаксис
+const greetArrow = (name) =&gt; {
+    return `Здравствуйте, ${name}!`;
+};
+
+// Если тело функции — одно выражение, можно опустить {} и return
+const greetShort = (name) =&gt; `Здравствуйте, ${name}!`;
+
+console.log(greet(&quot;Мир&quot;));
+</code></pre>
+            <p>
+                Стрелочные функции особенно часто используются как аргументы других функций —
+                например, при обработке массивов.
+            </p>
+            <hr />
+            <h2>6. Массивы и методы работы с ними</h2>
+            <pre><code class="language-javascript">const numbers = [1, 2, 3, 4, 5];
+
+// map — создаёт новый массив, применяя функцию к каждому элементу
+const doubled = numbers.map(n =&gt; n * 2);
+console.log(doubled); // [2, 4, 6, 8, 10]
+
+// filter — создаёт новый массив только с элементами, прошедшими проверку
+const even = numbers.filter(n =&gt; n % 2 === 0);
+console.log(even); // [2, 4]
+
+// reduce — сводит массив к одному значению
+const sum = numbers.reduce((total, n) =&gt; total + n, 0);
+console.log(sum); // 15
+
+// find — находит первый подходящий элемент
+const found = numbers.find(n =&gt; n &gt; 3);
+console.log(found); // 4
+</code></pre>
+            <p>
+                Методы <code>map</code>, <code>filter</code>, <code>reduce</code> — одни из самых
+                часто используемых инструментов современного JavaScript, в том числе во
+                фронтенд-фреймворках вроде Vue и React при выводе списков.
+            </p>
+            <hr />
+            <h2>7. Объекты</h2>
+            <pre><code class="language-javascript">const student = {
+    name: &quot;Азамат&quot;,
+    group: &quot;41-ПИ&quot;,
+    grades: [4, 5, 5, 3],
+
+    // метод объекта
+    getAverageGrade() {
+        const sum = this.grades.reduce((a, b) =&gt; a + b, 0);
+        return sum / this.grades.length;
+    }
+};
+
+console.log(student.name);            // Азамат
+console.log(student.getAverageGrade()); // 4.25
+</code></pre>
+            <hr />
+            <h2>8. Работа с DOM</h2>
+            <p>
+                <strong>DOM (Document Object Model)</strong> — представление HTML-страницы в виде
+                дерева объектов, с которым JavaScript может работать: находить элементы, менять их
+                содержимое, стили, реагировать на события.
+            </p>
+            <pre><code class="language-html">&lt;button id=&quot;myButton&quot;&gt;Нажми меня&lt;/button&gt;
+&lt;p id=&quot;output&quot;&gt;&lt;/p&gt;
+
+&lt;script&gt;
+    const button = document.getElementById(&quot;myButton&quot;);
+    const output = document.getElementById(&quot;output&quot;);
+
+    button.addEventListener(&quot;click&quot;, () =&gt; {
+        output.textContent = &quot;Кнопка нажата!&quot;;
+    });
+&lt;/script&gt;
+</code></pre>
+            <h3>Основные методы поиска элементов</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Метод</th>
+                            <th>Назначение</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>document.getElementById(&quot;id&quot;)</code></td>
+                            <td>Поиск по id</td>
+                        </tr>
+                        <tr>
+                            <td><code>document.querySelector(&quot;селектор&quot;)</code></td>
+                            <td>Поиск первого элемента по CSS-селектору</td>
+                        </tr>
+                        <tr>
+                            <td><code>document.querySelectorAll(&quot;селектор&quot;)</code></td>
+                            <td>Поиск всех подходящих элементов</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3>Изменение содержимого и стилей</h3>
+            <pre><code class="language-javascript">const el = document.querySelector(&quot;.title&quot;);
+
+el.textContent = &quot;Новый текст&quot;;
+el.style.color = &quot;blue&quot;;
+el.classList.add(&quot;highlight&quot;);
+</code></pre>
+            <hr />
+            <h2>9. Запросы к серверу: <code>fetch</code></h2>
+            <p>
+                В первой лекции говорилось, что клиент обменивается данными с сервером по HTTP. В
+                JavaScript для отправки запросов используется встроенная функция
+                <strong><code>fetch</code></strong
+                >, работающая с <strong>промисами (Promise)</strong> — объектами, представляющими
+                результат асинхронной операции.
+            </p>
+            <pre><code class="language-javascript">fetch(&quot;https://jsonplaceholder.typicode.com/posts/1&quot;)
+    .then(response =&gt; response.json())
+    .then(data =&gt; console.log(data))
+    .catch(error =&gt; console.error(&quot;Ошибка:&quot;, error));
+</code></pre>
+            <p>Более современный и читаемый способ — синтаксис <code>async/await</code>:</p>
+            <pre><code class="language-javascript">async function loadPost() {
+    try {
+        const response = await fetch(&quot;https://jsonplaceholder.typicode.com/posts/1&quot;);
+        const data = await response.json();
+        console.log(data);
+    } catch (error) {
+        console.error(&quot;Ошибка:&quot;, error);
+    }
+}
+
+loadPost();
+</code></pre>
+            <p>Отправка данных на сервер (POST-запрос) с телом в формате JSON:</p>
+            <pre><code class="language-javascript">async function createPost() {
+    const response = await fetch(&quot;https://jsonplaceholder.typicode.com/posts&quot;, {
+        method: &quot;POST&quot;,
+        headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+        body: JSON.stringify({ title: &quot;Новый пост&quot;, body: &quot;Текст&quot;, userId: 1 })
+    });
+
+    const data = await response.json();
+    console.log(data);
+}
+</code></pre>
+            <p>
+                Именно так устроено взаимодействие SPA-приложений (на Vue, React) с backend-частью
+                на PHP или Node.js: фронтенд отправляет <code>fetch</code>-запрос к API, backend
+                возвращает JSON, а JavaScript обновляет содержимое страницы без перезагрузки.
+            </p>
+            <hr />
+            <h2>10. От чистого JavaScript к фреймворкам</h2>
+            <p>
+                Всё, что мы разобрали, — «чистый» или <strong>Vanilla JavaScript</strong>, без
+                каких-либо дополнительных библиотек. При росте приложения вручную искать элементы
+                через <code>querySelector</code> и обновлять их содержимое становится неудобно и
+                подвержено ошибкам. Для решения этой проблемы появились фреймворки:
+            </p>
+            <ul>
+                <li>
+                    <strong>Vue</strong>, <strong>React</strong>, <strong>Svelte</strong> —
+                    описывают интерфейс декларативно: разработчик описывает,
+                    <em>как должен выглядеть</em> интерфейс при определённых данных, а фреймворк сам
+                    обновляет DOM при изменении этих данных.
+                </li>
+                <li>
+                    Такой подход называется <strong>реактивностью</strong> и станет темой одной из
+                    следующих лекций курса.
+                </li>
+            </ul>
+            <hr />
+            <h2>11. Итоги</h2>
+            <ol>
+                <li>
+                    <strong>JavaScript</strong> выполняется в браузере пользователя и отвечает за
+                    интерактивность страницы, в отличие от PHP, который выполняется на сервере.
+                </li>
+                <li>
+                    Современный JavaScript использует <code>let</code>/<code>const</code> вместо
+                    <code>var</code>, строгое сравнение <code>===</code>, шаблонные строки и
+                    стрелочные функции.
+                </li>
+                <li>
+                    Методы массивов <code>map</code>, <code>filter</code>, <code>reduce</code> —
+                    базовый инструментарий для работы с данными в JS.
+                </li>
+                <li>
+                    <strong>DOM</strong> — представление страницы в виде дерева объектов; через
+                    <code>document.querySelector</code> и <code>addEventListener</code> JavaScript
+                    находит элементы и реагирует на действия пользователя.
+                </li>
+                <li>
+                    Функция <strong><code>fetch</code></strong> (с <code>async/await</code>) —
+                    стандартный способ обращения к backend-API из браузера; именно на этом механизме
+                    строится взаимодействие SPA-приложений с сервером.
+                </li>
+                <li>
+                    Ручная работа с DOM — основа для понимания того, как устроены современные
+                    фреймворки (Vue, React), которые автоматизируют обновление интерфейса.
+                </li>
+            </ol>
+        </main>
+    </body>
+</html>
