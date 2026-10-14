@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Инструкция — Новый навык</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Новый навык</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Курсы</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>План интеграции: Новый навык</h1>
+            <p>
+                Скопируйте эту папку целиком. Не нужны npm, сборка или интернет. Откройте index.html
+                в браузере. Формы отключены до реализации обработчиков.
+            </p>
+            <h2>Страницы</h2>
+            <ul>
+                <li><a href="index.html">index.html</a></li>
+                <li><a href="catalog.html">catalog.html</a></li>
+                <li><a href="detail.html">detail.html</a></li>
+                <li><a href="contacts.html">contacts.html</a></li>
+                <li><a href="admin.html">admin.html</a></li>
+                <li><a href="register.html">register.html</a></li>
+                <li><a href="login.html">login.html</a></li>
+                <li><a href="profile.html">profile.html</a></li>
+                <li><a href="saved.html">saved.html</a></li>
+                <li><a href="api-app.html">api-app.html</a></li>
+            </ul>
+            <h2>Первые шаги</h2>
+            <ol>
+                <li>
+                    Скопируйте сайт в свой каталог локального сервера и сохраните исходную копию.
+                </li>
+                <li>
+                    Переименуйте 10 страниц интерфейса из .html в .php. Исправьте все href и action,
+                    включая ссылки с id/edit. README.html оставьте инструкцией.
+                </li>
+                <li>
+                    Вынесите шапку и подвал в includes/header.php и includes/footer.php.
+                    Дублирующиеся карточки замените foreach.
+                </li>
+                <li>
+                    Создайте config.php с $pdo. Основная таблица: courses. Поля: id, title, content,
+                    created_at и поле вашего варианта. Начальное поле макета: level.
+                </li>
+                <li>
+                    В коде лабораторных замените таблицу news на courses, news.php на catalog.php,
+                    API на api-courses.php. Замените дополнительное поле в формах, карточках, SQL и
+                    JSON согласно варианту.
+                </li>
+                <li>
+                    Подключайте серверные действия по мере лабораторных; после реализации убирайте
+                    disabled у соответствующих кнопок и пояснения о статичном макете.
+                </li>
+                <li>
+                    Сессии запускайте до вывода. CSRF-токены создаёт PHP; постоянный токен в HTML не
+                    подходит. Админку и API защищайте серверными проверками.
+                </li>
+            </ol>
+            <h2>Самостоятельность</h2>
+            <p>
+                Придумайте свои данные, объясните три изменения интерфейса и выполните особенность
+                варианта. После шагов 4, 10, 16 и 20 самостоятельно покажите работу на контрольных
+                точках.
+                <a href="../assignments.html#independent-work">Правила, сдача и оценивание</a>.
+            </p>
+            <h2>Варианты</h2>
+            <ul>
+                <li><a href="../variants/variant-13.html">Вариант 13: Курсы для начинающих</a></li>
+                <li><a href="../variants/variant-14.html">Вариант 14: Интенсивы</a></li>
+                <li><a href="../variants/variant-15.html">Вариант 15: Авторские курсы</a></li>
+                <li><a href="../variants/variant-16.html">Вариант 16: Тематические курсы</a></li>
+            </ul>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

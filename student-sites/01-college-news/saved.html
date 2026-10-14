@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Избранное</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Пульс колледжа</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Новости</a
+                ><a href="contacts.html">Контакты</a
+                ><a href="saved.html" aria-current="page">Избранное</a><a href="login.html">Вход</a
+                ><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Избранное</h1>
+            <p>Пока здесь нет сохранённых записей.</p>
+            <!-- PHP: записи по id из $_SESSION; обработать удалённые записи --><a
+                class="button"
+                href="catalog.html"
+                >Выбрать записи</a
+            >
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

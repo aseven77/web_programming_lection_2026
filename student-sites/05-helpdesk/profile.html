@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Личный профиль</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Помощь рядом</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Заявки</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Личный профиль</h1>
+            <p class="meta">Пример отображения после входа.</p>
+            <!-- PHP: текущий пользователь, защита до HTML, no-store -->
+            <dl>
+                <dt>Имя</dt>
+                <dd>Анна</dd>
+                <dt>Email</dt>
+                <dd>anna@example.test</dd>
+                <dt>Роль</dt>
+                <dd>Пользователь</dd>
+            </dl>
+            <p><a href="saved.html">Избранное</a></p>
+            <form action="login.html" method="post">
+                <!-- PHP: logout.php и csrf --><button disabled>Выйти</button>
+            </form>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

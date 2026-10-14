@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Что происходит в колледже</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php -->
+            <a class="brand" href="index.html">Пульс колледжа</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html" aria-current="page">Главная</a>
+                <a href="catalog.html">Новости</a>
+                <a href="contacts.html">Контакты</a>
+                <a href="saved.html">Избранное</a>
+                <a href="login.html">Вход</a>
+                <a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <section class="hero">
+                <h1>Что происходит в колледже</h1>
+                <p>Учебные проекты, встречи и достижения студентов.</p>
+                <a class="button" href="catalog.html">Открыть каталог</a>
+            </section>
+            <h2>Последние обновления</h2>
+            <div class="grid">
+                <!-- PHP: заменить article на foreach с экранированием -->
+                <article class="card">
+                    <span class="tag">Учёба</span>
+                    <h2><a href="detail.html?id=1">Студенты представили веб-проекты</a></h2>
+                    <p class="meta"><time datetime="2026-10-14">14 октября 2026</time></p>
+                    <p>
+                        Команды показали первые сайты и рассказали о работе с формами. Открытая
+                        защита прошла в учебном корпусе.
+                    </p>
+                    <a href="detail.html?id=1">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Практика</span>
+                    <h2><a href="detail.html?id=2">Открыта спортивная секция</a></h2>
+                    <p class="meta"><time datetime="2026-10-13">13 октября 2026</time></p>
+                    <p>
+                        Занятия проходят после пар. Новичкам помогут выбрать группу и составить план
+                        тренировок.
+                    </p>
+                    <a href="detail.html?id=2">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Проекты</span>
+                    <h2><a href="detail.html?id=3">Выставка студенческих работ</a></h2>
+                    <p class="meta"><time datetime="2026-10-12">12 октября 2026</time></p>
+                    <p>
+                        В библиотеке собраны работы студентов: иллюстрации, фотографии и небольшие
+                        макеты.
+                    </p>
+                    <a href="detail.html?id=3">Подробнее</a>
+                </article>
+            </div>
+            <h2>О проекте</h2>
+            <p>Пульс колледжа — небольшой учебный сайт. Все имена и записи вымышлены.</p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

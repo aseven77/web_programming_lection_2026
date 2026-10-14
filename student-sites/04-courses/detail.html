@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Первые страницы на HTML</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Новый навык</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Курсы</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <p><a href="catalog.html">Вернуться в каталог</a></p>
+            <!-- PHP: читать выбранную запись по GET id -->
+            <article class="prose">
+                <h1>Первые страницы на HTML</h1>
+                <p class="meta"><time datetime="2026-10-14">14 октября 2026</time></p>
+                <p>
+                    Научимся создавать простые страницы с текстом, ссылками и формами. Итог — личный
+                    учебный проект.
+                </p>
+                <p><strong>Уровень:</strong> Начальный</p>
+                <p>Подробности можно уточнить у команды проекта.</p>
+            </article>
+            <form action="saved.html" method="post">
+                <input type="hidden" name="id" value="1" /><input
+                    type="hidden"
+                    name="action"
+                    value="add"
+                /><!-- PHP: csrf --><button disabled>Добавить в избранное</button>
+            </form>
+            <p class="meta">
+                Это образец первой записи. В HTML разные id показывают тот же образец; выбор записи
+                реализуйте в PHP.
+            </p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Решаем вопросы вместе</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Помощь рядом</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html" aria-current="page">Главная</a><a href="catalog.html">Заявки</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <section class="hero">
+                <h1>Решаем вопросы вместе</h1>
+                <p>Вопросы о технике, аудиториях и учебных материалах.</p>
+                <a class="button" href="catalog.html">Открыть каталог</a>
+            </section>
+            <h2>Последние обновления</h2>
+            <div class="grid">
+                <!-- PHP: заменить article на foreach с экранированием -->
+                <article class="card">
+                    <span class="tag">Новая</span>
+                    <h2><a href="detail.html?id=1">Не работает проектор</a></h2>
+                    <p class="meta"><time datetime="2026-10-14">14 октября 2026</time></p>
+                    <p>
+                        В аудитории 205 требуется проверка оборудования. Заявка создана после
+                        занятий и ожидает обработки.
+                    </p>
+                    <a href="detail.html?id=1">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">В работе</span>
+                    <h2><a href="detail.html?id=2">Доступ к материалам</a></h2>
+                    <p class="meta"><time datetime="2026-10-13">13 октября 2026</time></p>
+                    <p>
+                        Необходимо проверить доступ к учебным материалам. Данные в примере
+                        вымышлены.
+                    </p>
+                    <a href="detail.html?id=2">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Решена</span>
+                    <h2><a href="detail.html?id=3">Проверить компьютер</a></h2>
+                    <p class="meta"><time datetime="2026-10-12">12 октября 2026</time></p>
+                    <p>Рабочее место требует настройки. Подробности указаны в описании заявки.</p>
+                    <a href="detail.html?id=3">Подробнее</a>
+                </article>
+            </div>
+            <h2>О проекте</h2>
+            <p>Помощь рядом — небольшой учебный сайт. Все имена и записи вымышлены.</p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

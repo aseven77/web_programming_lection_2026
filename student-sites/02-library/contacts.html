@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Контакты</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Книжная полка</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Книги</a
+                ><a href="contacts.html" aria-current="page">Контакты</a
+                ><a href="saved.html">Избранное</a><a href="login.html">Вход</a
+                ><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Контакты</h1>
+            <!-- PHP: contacts из БД -->
+            <div class="grid">
+                <section>
+                    <h2>Команда проекта</h2>
+                    <p><a href="mailto:team@example.test">team@example.test</a></p>
+                    <p>Учебный корпус, кабинет 205</p>
+                </section>
+                <section>
+                    <h2>Часы работы</h2>
+                    <p>Понедельник — пятница<br />09:00–16:00</p>
+                    <p>Контакты вымышлены.</p>
+                </section>
+            </div>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

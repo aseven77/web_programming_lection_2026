@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Управление записями</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Книжная полка</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Книги</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a
+                ><a href="admin.html" aria-current="page">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Управление записями</h1>
+            <!-- PHP: роль admin до HTML; POST, валидация, PDO, CSRF, redirect 303 -->
+            <form class="form" action="admin.html" method="post">
+                <input type="hidden" name="action" value="create" /><label
+                    >Название<input name="title" required minlength="3" maxlength="120" /></label
+                ><label
+                    >Описание<textarea
+                        name="content"
+                        required
+                        minlength="20"
+                        maxlength="3000"
+                    ></textarea></label
+                ><label>Автор<input name="author" required value="Анна Миронова" /></label
+                ><button disabled>Сохранить запись</button>
+            </form>
+            <h2>Записи</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Название</th>
+                            <th scope="col">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Введение в веб-разработку</td>
+                            <td>
+                                <a href="admin.html?edit=1">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="1"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Алгоритмы для начинающих</td>
+                            <td>
+                                <a href="admin.html?edit=2">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="2"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>История одного города</td>
+                            <td>
+                                <a href="admin.html?edit=3">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="3"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Основы дизайна</td>
+                            <td>
+                                <a href="admin.html?edit=4">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="4"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Мир научных открытий</td>
+                            <td>
+                                <a href="admin.html?edit=5">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="5"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Практикум по базам данных</td>
+                            <td>
+                                <a href="admin.html?edit=6">Редактировать</a>
+                                <form action="admin.html" method="post">
+                                    <input type="hidden" name="action" value="delete" /><input
+                                        type="hidden"
+                                        name="id"
+                                        value="6"
+                                    /><button disabled>Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

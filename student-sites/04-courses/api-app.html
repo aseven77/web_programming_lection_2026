@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Курсы без перезагрузки</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Новый навык</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Курсы</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Курсы без перезагрузки</h1>
+            <p>Заготовка интерфейса для ЛР 7.</p>
+            <!-- JS/PHP: fetch, textContent, JSON -->
+            <p id="api-status" role="status" aria-live="polite">API ещё не подключён.</p>
+            <button disabled>Загрузить записи</button>
+            <div id="api-list"></div>
+            <h2>Добавить запись</h2>
+            <form class="form" action="api-app.html" method="post">
+                <label>Название<input name="title" required minlength="3" maxlength="120" /></label
+                ><label
+                    >Описание<textarea
+                        name="content"
+                        required
+                        minlength="20"
+                        maxlength="3000"
+                    ></textarea></label
+                ><label
+                    >Уровень<select name="level">
+                        <option>Начальный</option>
+                        <option>Средний</option>
+                        <option>Продвинутый</option>
+                    </select></label
+                ><button disabled>Добавить</button>
+            </form>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

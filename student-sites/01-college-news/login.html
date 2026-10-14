@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Вход</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Пульс колледжа</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Новости</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html" aria-current="page">Вход</a
+                ><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Вход</h1>
+            <!-- PHP: password_verify, session_regenerate_id, CSRF -->
+            <form class="form" action="login.html" method="post">
+                <label
+                    >Email<input
+                        type="email"
+                        name="email"
+                        required
+                        autocomplete="username" /></label
+                ><label
+                    >Пароль<input
+                        type="password"
+                        name="password"
+                        required
+                        autocomplete="current-password" /></label
+                ><button disabled>Войти</button>
+            </form>
+            <p><a href="register.html">Создать учётную запись</a></p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

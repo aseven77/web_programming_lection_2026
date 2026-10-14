@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Регистрация</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Книжная полка</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html">Главная</a><a href="catalog.html">Книги</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <h1>Регистрация</h1>
+            <!-- PHP: users, UNIQUE email, password_hash, user, CSRF -->
+            <form class="form" action="register.html" method="post">
+                <label
+                    >Имя<input
+                        name="name"
+                        required
+                        minlength="2"
+                        maxlength="80"
+                        autocomplete="name" /></label
+                ><label
+                    >Email<input
+                        name="email"
+                        type="email"
+                        required
+                        maxlength="191"
+                        autocomplete="email"
+                    /><small>Email используется для входа.</small></label
+                ><label
+                    >Пароль<input
+                        name="password"
+                        type="password"
+                        required
+                        autocomplete="new-password"
+                        aria-describedby="password-hint"
+                /></label>
+                <p id="password-hint">
+                    12–72 байта. Для первой проверки используйте латинские буквы и цифры.
+                </p>
+                <label
+                    >Повтор пароля<input
+                        name="confirmation"
+                        type="password"
+                        required
+                        autocomplete="new-password" /></label
+                ><button disabled>Зарегистрироваться</button>
+            </form>
+            <p><a href="login.html">Уже есть учётная запись</a></p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

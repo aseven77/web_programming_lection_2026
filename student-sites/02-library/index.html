@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Найдите следующую книгу</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Книжная полка</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html" aria-current="page">Главная</a><a href="catalog.html">Книги</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <section class="hero">
+                <h1>Найдите следующую книгу</h1>
+                <p>Книги для учёбы, любопытства и свободного чтения.</p>
+                <a class="button" href="catalog.html">Открыть каталог</a>
+            </section>
+            <h2>Последние обновления</h2>
+            <div class="grid">
+                <!-- PHP: заменить article на foreach с экранированием -->
+                <article class="card">
+                    <span class="tag">Анна Миронова</span>
+                    <h2><a href="detail.html?id=1">Введение в веб-разработку</a></h2>
+                    <p class="meta"><time datetime="2026-10-14">14 октября 2026</time></p>
+                    <p>
+                        Понятное введение в устройство веб-страниц. Каждая глава заканчивается
+                        небольшим практическим заданием.
+                    </p>
+                    <a href="detail.html?id=1">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Анна Миронова</span>
+                    <h2><a href="detail.html?id=2">Алгоритмы для начинающих</a></h2>
+                    <p class="meta"><time datetime="2026-10-13">13 октября 2026</time></p>
+                    <p>Задачи на поиск и сортировку с разбором решения и проверкой результата.</p>
+                    <a href="detail.html?id=2">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Анна Миронова</span>
+                    <h2><a href="detail.html?id=3">История одного города</a></h2>
+                    <p class="meta"><time datetime="2026-10-12">12 октября 2026</time></p>
+                    <p>
+                        Книга для самостоятельного чтения. Подробности об издании можно уточнить у
+                        библиотекаря.
+                    </p>
+                    <a href="detail.html?id=3">Подробнее</a>
+                </article>
+            </div>
+            <h2>О проекте</h2>
+            <p>Книжная полка — небольшой учебный сайт. Все имена и записи вымышлены.</p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>

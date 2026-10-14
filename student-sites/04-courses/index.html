@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Учиться небольшими шагами</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <a class="skip" href="#main">К содержимому</a>
+        <header>
+            <!-- PHP: header.php --><a class="brand" href="index.html">Новый навык</a>
+            <nav aria-label="Основная навигация">
+                <a href="index.html" aria-current="page">Главная</a><a href="catalog.html">Курсы</a
+                ><a href="contacts.html">Контакты</a><a href="saved.html">Избранное</a
+                ><a href="login.html">Вход</a><a href="admin.html">Управление</a>
+            </nav>
+        </header>
+        <main class="guide" id="main">
+            <section class="hero">
+                <h1>Учиться небольшими шагами</h1>
+                <p>Практические курсы с понятной целью каждого занятия.</p>
+                <a class="button" href="catalog.html">Открыть каталог</a>
+            </section>
+            <h2>Последние обновления</h2>
+            <div class="grid">
+                <!-- PHP: заменить article на foreach с экранированием -->
+                <article class="card">
+                    <span class="tag">Начальный</span>
+                    <h2><a href="detail.html?id=1">Первые страницы на HTML</a></h2>
+                    <p class="meta"><time datetime="2026-10-14">14 октября 2026</time></p>
+                    <p>
+                        Научимся создавать простые страницы с текстом, ссылками и формами. Итог —
+                        личный учебный проект.
+                    </p>
+                    <a href="detail.html?id=1">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Средний</span>
+                    <h2><a href="detail.html?id=2">Работа с CSS</a></h2>
+                    <p class="meta"><time datetime="2026-10-13">13 октября 2026</time></p>
+                    <p>
+                        Практические занятия с короткими заданиями. После каждого шага проверяем,
+                        что получилось.
+                    </p>
+                    <a href="detail.html?id=2">Подробнее</a>
+                </article>
+                <article class="card">
+                    <span class="tag">Продвинутый</span>
+                    <h2><a href="detail.html?id=3">Основы PHP</a></h2>
+                    <p class="meta"><time datetime="2026-10-12">12 октября 2026</time></p>
+                    <p>
+                        Разберём основы технологии и применим их в небольшом самостоятельном
+                        проекте.
+                    </p>
+                    <a href="detail.html?id=3">Подробнее</a>
+                </article>
+            </div>
+            <h2>О проекте</h2>
+            <p>Новый навык — небольшой учебный сайт. Все имена и записи вымышлены.</p>
+            <p class="notice">
+                Учебный HTML-макет. Поиск, сохранение, вход и изменение записей появятся после
+                интеграции PHP. <a href="README.html">Инструкция</a>.
+            </p>
+        </main>
+        <footer>
+            <!-- PHP: footer.php -->
+            <p>Web-программирование · Учебный проект, 2026</p>
+            <a href="README.html">План интеграции</a> · <a href="../assignments.html">Задания</a>
+        </footer>
+    </body>
+</html>
