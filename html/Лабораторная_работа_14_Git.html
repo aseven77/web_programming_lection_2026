@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Лабораторная работа №14</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main>
+            <nav><a href="index.html">← Все материалы курса</a></nav>
+<h1>Лабораторная работа №14</h1>
+<h2>Git с нуля: история маленького сайта</h2>
+<p><a href="Web-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9B%D0%B5%D0%BA%D1%86%D0%B8%D1%8F_14_Git.html">Лекция №14</a> · <a href="%D0%9B%D0%B0%D0%B1%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_13_%D0%90%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F.html">Предыдущая работа: авторизация</a></p>
+<h2>Что сделаем</h2>
+<p>Создадим маленький сайт о питомце и научимся сохранять его развитие в Git. Можно выбрать вымышленного питомца, любимого персонажа или своё хобби — настоящие личные данные не нужны.</p>
+<p>В конце у вас будут две HTML-страницы, понятная история коммитов, файл правил игнорирования и отдельная ветка, изменения которой вошли в <code>main</code>.</p>
+<p><strong>Время:</strong> ориентировочно 90–120 минут. Шаги 1–9 — основа, 10–12 — ветки и самостоятельная работа. Дополнительное задание после них можно выполнить позже.</p>
+<h2>Перед началом</h2>
+<p>Нужны Windows, PowerShell, установленный Git 2.28 или новее, редактор кода и браузер. Установка описана в <a href="Web-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9B%D0%B5%D0%BA%D1%86%D0%B8%D1%8F_14_Git.html">лекции</a>. Интернет нужен только для первоначальной загрузки Git; дальше работаем локально. PHP, база данных, OpenServer и аккаунт GitHub не требуются.</p>
+<p>Создавайте <strong>новый учебный проект вне папки курса и других репозиториев</strong>. Если вы уже повторяли лекцию, для лабораторной заведите новую папку <code>git-pet-lab</code>. Не удаляйте старую историю ради повторения.</p>
+<p>Команды вводим в терминал PowerShell, HTML и содержимое других файлов — в редактор. После редактирования нажимаем <code>Ctrl+S</code>. После изменения HTML обновляем страницу в браузере.</p>
+<h2>Шаг 1. Подготовить папку и терминал</h2>
+<ol>
+<li>Через Проводник откройте «Документы».</li>
+<li>Создайте новую пустую папку <code>git-pet-lab</code>.</li>
+<li>В VS Code выберите «Файл → Открыть папку» и откройте именно её.</li>
+<li>Выберите «Терминал → Создать терминал», используйте PowerShell.</li>
+<li>Выполните по одной строке:</li>
+</ol>
+<pre><code class="language-powershell">Get-Location
+Get-ChildItem
+git --version
+</code></pre>
+<p><strong>Проверка:</strong> путь оканчивается на <code>git-pet-lab</code>, папка пока пустая, Git отвечает строкой <code>git version ...</code>. Если путь другой, снова откройте нужную папку и новый терминал. Если Git не найден, сначала решите установку по лекции.</p>
+<p>Не вводите часть приглашения вида <code>PS C:\...&gt;</code> и не копируйте ответы программы как команды.</p>
+<h2>Шаг 2. Начать историю и указать автора</h2>
+<pre><code class="language-powershell">git init -b main
+git config user.name &quot;Student&quot;
+git config user.email &quot;student@example.test&quot;
+git config --get user.name
+git config --get user.email
+git status
+</code></pre>
+<p>Можете заменить <code>Student</code> своим учебным именем. Адрес <code>student@example.test</code> вымышленный, для этой локальной работы его достаточно. Команды задают подпись только в текущем репозитории.</p>
+<p><strong>Ожидаем:</strong> <code>On branch main</code>, <code>No commits yet</code>. История начата, но сохранений пока нет. Если терминал сообщает <code>Reinitialized existing Git repository</code>, проверьте, действительно ли вы выбрали новую папку.</p>
+<p>Папка <code>.git</code> может быть скрыта в Проводнике. Не создавайте её вручную и не меняйте её содержимое.</p>
+<h2>Шаг 3. Создать страницу и первый коммит</h2>
+<p>В редакторе создайте <code>index.html</code> и вставьте <strong>полный код</strong>:</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;Мой питомец&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Мой кот Барсик&lt;/h1&gt;
+    &lt;p&gt;Это первая версия моего сайта.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>Сохраните файл. Убедитесь, что он называется <code>index.html</code>, а не <code>index.html.txt</code>. Откройте его в браузере двойным щелчком.</p>
+<p>В терминале:</p>
+<pre><code class="language-powershell">git status
+</code></pre>
+<p><strong>Проверка до добавления:</strong> <code>index.html</code> находится в <code>Untracked files</code>. Теперь:</p>
+<pre><code class="language-powershell">git add index.html
+git status
+git diff --staged
+</code></pre>
+<p><strong>Проверка подготовки:</strong> <code>index.html</code> находится в <code>Changes to be committed</code>; в разнице виден добавленный HTML. Если открылся просмотрщик с <code>(END)</code>, выйдите английской клавишей <code>q</code>.</p>
+<pre><code class="language-powershell">git commit -m &quot;Создать первую страницу о питомце&quot;
+git status
+git log --oneline
+</code></pre>
+<p><strong>Ожидаем:</strong> один коммит и <code>working tree clean</code>. Сохраните для отчёта его идентификатор из <code>log</code>.</p>
+<p><strong>Объясните вслух:</strong> что сделали отдельно <code>Ctrl+S</code>, <code>add</code> и <code>commit</code>?</p>
+<h2>Шаг 4. Изменить страницу и прочитать разницу</h2>
+<p>Замените только строку <code>&lt;h1&gt;</code> в <code>index.html</code>:</p>
+<pre><code class="language-html">&lt;h1&gt;Кот Барсик — хозяин дома&lt;/h1&gt;
+</code></pre>
+<p>Сохраните файл и обновите браузер. Затем:</p>
+<pre><code class="language-powershell">git status
+git diff
+</code></pre>
+<p><strong>Ожидаем:</strong> файл помечен <code>modified</code>; в разнице старый заголовок со знаком <code>-</code>, новый — со знаком <code>+</code>.</p>
+<pre><code class="language-powershell">git add index.html
+git diff
+git diff --staged
+git commit -m &quot;Уточнить заголовок страницы&quot;
+</code></pre>
+<p><strong>Проверка:</strong> сразу после <code>add</code> обычный <code>diff</code> пустой, а <code>diff --staged</code> показывает заголовок. После коммита в <code>git log --oneline</code> две записи.</p>
+<p>Запишите одним предложением, почему пустой <code>git diff</code> перед коммитом не означал отсутствие изменений вообще.</p>
+<h2>Шаг 5. Убедиться, что add запоминает конкретный вариант</h2>
+<p>В <code>index.html</code> перед <code>&lt;/body&gt;</code> добавьте строку и сохраните файл:</p>
+<pre><code class="language-html">&lt;p&gt;Барсик любит спать.&lt;/p&gt;
+</code></pre>
+<pre><code class="language-powershell">git add index.html
+</code></pre>
+<p>Теперь в редакторе замените <strong>только что добавленную строку</strong> и снова сохраните:</p>
+<pre><code class="language-html">&lt;p&gt;Барсик любит играть.&lt;/p&gt;
+</code></pre>
+<pre><code class="language-powershell">git status
+git diff
+git diff --staged
+</code></pre>
+<p><strong>Ожидаем:</strong> <code>index.html</code> есть и среди подготовленных, и среди неподготовленных изменений. <code>diff --staged</code> показывает добавление строки про сон. Обычный <code>diff</code> показывает её замену на строку про игры.</p>
+<p>Пока <strong>не делайте коммит</strong>. Сначала заберём в подготовку правильную версию:</p>
+<pre><code class="language-powershell">git add index.html
+git diff --staged
+git commit -m &quot;Рассказать о любимом занятии питомца&quot;
+</code></pre>
+<p><strong>Проверка:</strong> подготовленная версия перед коммитом говорит про игры; теперь в истории три коммита. Снимок вывода двух видов <code>diff</code> до повторного <code>add</code> пригодится для защиты.</p>
+<h2>Шаг 6. Убрать изменение из подготовки, сохранив текст</h2>
+<p>В редакторе создайте файл <code>README.md</code> — короткую инструкцию о проекте. Вставьте:</p>
+<pre><code class="language-markdown"># Сайт о питомце
+
+Учебный проект для знакомства с Git.
+
+Чтобы открыть сайт, дважды щёлкните по index.html.
+</code></pre>
+<p>Сохраните файл и подготовьте:</p>
+<pre><code class="language-powershell">git add README.md
+git status
+git restore --staged README.md
+git status
+</code></pre>
+<p><strong>Ожидаем:</strong> <code>README.md</code> снова в <code>Untracked files</code>, потому что это новый файл, которого ещё нет ни в одном коммите. Откройте его: весь текст на месте. Мы отменили подготовку, а не создание файла.</p>
+<p>Теперь всё-таки сохраним инструкцию в историю:</p>
+<pre><code class="language-powershell">git add README.md
+git commit -m &quot;Добавить инструкцию запуска сайта&quot;
+</code></pre>
+<p><strong>Проверка:</strong> четыре коммита, рабочая папка чистая.</p>
+<h2>Шаг 7. Отменить специально сделанную ошибку</h2>
+<p>Этот опыт выполняем <strong>только после успешного коммита шага 6</strong>. Убедитесь через <code>git status</code>, что нет других изменений.</p>
+<p>В <code>index.html</code> временно замените заголовок строкой:</p>
+<pre><code class="language-html">&lt;h1&gt;ОШИБКА ДЛЯ ОПЫТА&lt;/h1&gt;
+</code></pre>
+<p>Сохраните файл. <strong>Не выполняйте <code>git add</code>.</strong> Посмотрите, что мы собираемся отбросить:</p>
+<pre><code class="language-powershell">git diff -- index.html
+</code></pre>
+<p>Если в разнице только эта специально сделанная ошибка, выполните:</p>
+<pre><code class="language-powershell">git restore index.html
+git status
+</code></pre>
+<p><strong>Ожидаем:</strong> вернулся заголовок «Кот Барсик — хозяин дома», снова <code>working tree clean</code>, число коммитов осталось четыре. Обновите браузер.</p>
+<p>Команда заменила рабочий файл его подготовленной версией; здесь она совпадала с последним коммитом. Реальные нужные правки так отменять нельзя: несохранённый в Git текст может быть потерян.</p>
+<p>Если редактор предлагает сохранить старое содержимое поверх изменённого файла, перечитайте файл с диска, чтобы случайно не вернуть ошибку.</p>
+<h2>Шаг 8. Настроить игнорирование лишнего файла</h2>
+<p>Создайте в корне проекта файл с точным именем <code>.gitignore</code>, без <code>.txt</code> в конце:</p>
+<pre><code class="language-gitignore">notes-private.txt
+*.log
+.env
+</code></pre>
+<p>Теперь создайте <code>notes-private.txt</code> с вымышленной заметкой:</p>
+<pre><code class="language-text">Пробная заметка: купить игрушечную мышку.
+</code></pre>
+<p>Сохраните оба файла. Настоящие пароли и личные данные в этом опыте не используйте.</p>
+<pre><code class="language-powershell">git status
+git check-ignore -v notes-private.txt
+</code></pre>
+<p><strong>Ожидаем:</strong> <code>status</code> показывает новый <code>.gitignore</code>, но не показывает заметку. <code>check-ignore</code> выводит правило из <code>.gitignore</code>, которое исключило <code>notes-private.txt</code>. При этом сама заметка по-прежнему есть на диске.</p>
+<pre><code class="language-powershell">git add .gitignore
+git commit -m &quot;Добавить правила игнорирования&quot;
+git ls-files
+</code></pre>
+<p><code>git ls-files</code> показывает отслеживаемые файлы. Сейчас это <code>.gitignore</code>, <code>README.md</code> и <code>index.html</code>; заметки среди них нет. В истории пять коммитов.</p>
+<p>Если заметка всё-таки отслеживается, значит, её добавили раньше правила. Не пытайтесь исправить это простым добавлением ещё одной строки в <code>.gitignore</code>: покажите результат преподавателю. В основном сценарии заметку не добавляли в индекс.</p>
+<h2>Шаг 9. Прочитать свою историю</h2>
+<pre><code class="language-powershell">git log --oneline
+git show
+</code></pre>
+<p>Ответьте письменно:</p>
+<ol>
+<li>Какой коммит был первым? Укажите его короткий идентификатор.</li>
+<li>Какое сообщение у самого нового коммита?</li>
+<li>Какой файл изменён в последнем коммите?</li>
+<li>Почему коммита с заголовком «ОШИБКА ДЛЯ ОПЫТА» в истории нет?</li>
+</ol>
+<p><strong>Проверка:</strong> пять осмысленных сохранений; новое расположено сверху. <code>git show</code> последнего коммита показывает добавление <code>.gitignore</code>.</p>
+<p>На этом основа пройдена. Перед следующим шагом попробуйте объяснить соседу путь «файл → подготовка → коммит» без подсказки.</p>
+<h2>Шаг 10. Сделать вторую страницу в отдельной ветке</h2>
+<p>Сначала <code>git status</code>: ожидаем чистое состояние. Затем:</p>
+<pre><code class="language-powershell">git switch -c about-pet
+git branch
+</code></pre>
+<p><strong>Ожидаем:</strong> звёздочка возле <code>about-pet</code>. Создайте <code>about.html</code>:</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;title&gt;О питомце&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;О Барсике&lt;/h1&gt;
+    &lt;p&gt;Барсик любит коробки и солнечные подоконники.&lt;/p&gt;
+    &lt;a href=&quot;index.html&quot;&gt;На главную&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>В <code>index.html</code> перед <code>&lt;/body&gt;</code> добавьте:</p>
+<pre><code class="language-html">&lt;a href=&quot;about.html&quot;&gt;Подробнее о питомце&lt;/a&gt;
+</code></pre>
+<p>Сохраните оба файла, откройте сайт и проверьте переход туда и обратно.</p>
+<pre><code class="language-powershell">git add index.html about.html
+git diff --staged
+git commit -m &quot;Добавить страницу о питомце и навигацию&quot;
+git status
+git switch main
+</code></pre>
+<p><strong>Ожидаем:</strong> в рабочей папке больше нет <code>about.html</code>, а в <code>index.html</code> нет новой ссылки. Обновите главную страницу. Это нормальное содержимое <code>main</code>: шестой коммит пока только в <code>about-pet</code>.</p>
+<p>Заметка <code>notes-private.txt</code> остаётся: она игнорируется и не входила в коммиты веток.</p>
+<p>Чтобы увидеть обе линии истории:</p>
+<pre><code class="language-powershell">git log --oneline --all --graph --decorate
+</code></pre>
+<p><code>--all</code> показывает коммиты всех веток, <code>--graph</code> рисует связи, <code>--decorate</code> показывает подписи веток. Здесь граф может быть прямым: в <code>main</code> после ответвления не было новых коммитов.</p>
+<h2>Шаг 11. Включить готовую страницу в main</h2>
+<pre><code class="language-powershell">git branch --show-current
+git status
+</code></pre>
+<p><strong>Перед слиянием:</strong> текущая ветка — <code>main</code>, рабочая папка чистая. Выполните:</p>
+<pre><code class="language-powershell">git merge about-pet
+git status
+git log --oneline --all --graph --decorate
+</code></pre>
+<p><strong>Ожидаем:</strong> сообщение <code>Fast-forward</code>, файл <code>about.html</code> и ссылка на него вернулись. В <code>main</code> теперь шесть коммитов, а отдельного седьмого коммита слияния в этом сценарии нет.</p>
+<p>Откройте <code>index.html</code>, перейдите на вторую страницу и вернитесь. Git объединил изменения, а работу ссылки проверяем сами.</p>
+<p>Если вместо ожидаемого результата возник конфликт, остановитесь и прочитайте <code>git status</code>. При точном выполнении шагов конфликт не ожидается; вместе с преподавателем найдите, какие дополнительные правки были сделаны. Не удаляйте <code>.git</code> и не запускайте случайные команды сброса.</p>
+<h2>Шаг 12. Самостоятельно сделать маленькое улучшение</h2>
+<p>Оставаясь в <code>main</code>, добавьте на главную страницу список из трёх любимых занятий питомца. Для другой темы придумайте три подходящих пункта.</p>
+<p>Без копирования готовой последовательности:</p>
+<ol>
+<li>Сохраните файл и посмотрите страницу в браузере.</li>
+<li>Проверьте состояние и разницу.</li>
+<li>Подготовьте только нужный файл.</li>
+<li>Проверьте подготовленные изменения.</li>
+<li>Сделайте коммит с собственным понятным сообщением.</li>
+<li>Убедитесь, что рабочая папка чистая, а в истории появился новый коммит.</li>
+</ol>
+<p><strong>Итог основной работы:</strong> не меньше семи осмысленных коммитов, текущая ветка <code>main</code>, вторая страница включена в неё, заметка не отслеживается. Если сделали дополнительные осмысленные коммиты, их может быть больше.</p>
+<h2>Дополнительно: получить копию без интернета</h2>
+<p>Это задание не входит в обязательные баллы. Оно показывает смысл <code>clone</code> без регистрации на сервисах.</p>
+<p>После завершения основной работы в терминале, находящемся в <code>git-pet-lab</code>, выполните:</p>
+<pre><code class="language-powershell">cd ..
+git clone git-pet-lab git-pet-copy
+cd git-pet-copy
+git log --oneline
+git status
+git remote -v
+</code></pre>
+<p>Папка <code>git-pet-copy</code> до начала должна отсутствовать. Если она уже есть, выберите другое новое имя и используйте его в обеих соответствующих командах; чужую папку не удаляйте.</p>
+<p><strong>Ожидаем:</strong> в копии есть страницы и история, а <code>notes-private.txt</code> нет. Источником <code>origin</code> будет локальный путь к исходному репозиторию. <code>clone</code> переносит историю и получает рабочие файлы из коммита, а не копирует весь мусор из соседней папки.</p>
+<p>Это опыт на одном диске, поэтому защитой от его поломки такая копия не является. Для сдачи возвращайтесь к исходной папке <code>git-pet-lab</code>.</p>
+<h2>Если что-то не получается</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Сообщение или ситуация</th>
+<th>Что проверить</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git</code> не распознан</td>
+<td>Установлен ли Git; перезапущены ли PowerShell и редактор после установки</td>
+</tr>
+<tr>
+<td><code>unknown switch b</code> при <code>init</code> или неизвестная <code>switch</code>/<code>restore</code></td>
+<td>Версию Git; для примеров нужен 2.28 или новее</td>
+</tr>
+<tr>
+<td><code>not a git repository</code></td>
+<td>Текущую папку через <code>Get-Location</code>; был ли здесь <code>git init</code></td>
+</tr>
+<tr>
+<td><code>Author identity unknown</code></td>
+<td>Повторить две настройки <code>user.name</code> и <code>user.email</code> в текущем репозитории</td>
+</tr>
+<tr>
+<td><code>pathspec ... did not match any files</code> при <code>add</code></td>
+<td>Сохранён ли файл, совпадает ли имя, нет ли окончания <code>.txt</code>, правильная ли текущая папка</td>
+</tr>
+<tr>
+<td><code>nothing to commit</code></td>
+<td>Было ли реальное изменение, сохранён ли файл, выполнен ли <code>add</code>; посмотреть <code>status</code></td>
+</tr>
+<tr>
+<td><code>diff</code> пустой</td>
+<td>Возможно, изменение уже подготовлено; посмотреть <code>diff --staged</code> и <code>status</code></td>
+</tr>
+<tr>
+<td>Файл сразу в двух разделах <code>status</code></td>
+<td>После <code>add</code> его снова изменили; сравнить оба вида <code>diff</code></td>
+</tr>
+<tr>
+<td><code>warning: LF will be replaced by CRLF</code></td>
+<td>Предупреждение о переносах строк, не потеря текста; проверить, что команда завершилась и <code>status</code> ожидаемый</td>
+</tr>
+<tr>
+<td>Внизу <code>(END)</code>, команды не вводятся</td>
+<td>Нажать английскую <code>q</code>, чтобы выйти из просмотра</td>
+</tr>
+<tr>
+<td>После <code>switch main</code> исчез <code>about.html</code></td>
+<td>До слияния это ожидаемо: файл сохранён в другой ветке</td>
+</tr>
+<tr>
+<td><code>Your local changes ... would be overwritten</code></td>
+<td>Есть незакоммиченные правки; посмотреть <code>status</code>, сохранить нужную работу коммитом и повторить переключение</td>
+</tr>
+<tr>
+<td><code>.gitignore</code> не исключает заметку</td>
+<td>Точное имя файла правил, сохранение файла, не добавлена ли заметка в Git раньше</td>
+</tr>
+<tr>
+<td>Браузер показывает старый текст</td>
+<td>Сохранить файл и обновить страницу; проверить, какой файл открыт, особенно после <code>clone</code></td>
+</tr>
+</tbody></table></div>
+<p>При непонятной ошибке сохраните её полный текст и вывод <code>git status</code>. Они полезнее, чем повторный запуск всех команд подряд.</p>
+<h2>Что сдать</h2>
+<ol>
+<li>Папку <strong>исходного</strong> проекта <code>git-pet-lab</code> с <code>.git</code>, <code>.gitignore</code>, <code>README.md</code>, <code>index.html</code>, <code>about.html</code>. Можно передать ZIP, но проверьте, что скрытая <code>.git</code> действительно попала в архив: без неё преподаватель не увидит историю. Учебную заметку прикладывать необязательно.</li>
+<li>Короткий отчёт отдельным файлом <strong>вне папки проекта</strong>: ответы из шага 9 и объяснение отличий <code>Ctrl+S</code>, <code>add</code>, <code>commit</code>.</li>
+<li>Скриншоты или текст вывода: оба вида <code>diff</code> в шаге 5 до повторного <code>add</code>; итоговые <code>git status</code>, <code>git log --oneline --all --graph --decorate</code>, <code>git ls-files</code> и <code>git check-ignore -v notes-private.txt</code>.</li>
+<li>Скриншот главной страницы и второй страницы после слияния.</li>
+</ol>
+<p>Не заменяйте репозиторий одним скриншотом сайта: в этой работе оценивается ещё и история. Интернет-публикация и ссылка на GitHub не обязательны.</p>
+<h2>Критерии — 10 баллов</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Результат</th>
+<th align="right">Баллы</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Репозиторий создан, указан автор, обе HTML-страницы открываются</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Не меньше семи осмысленных коммитов, понятные сообщения, студент читает историю</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Студент показывает разницу между рабочим файлом и подготовленным вариантом</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Продемонстрированы отмена подготовки и отмена специально сделанной ошибки</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td><code>.gitignore</code> сохранён в истории, заметка не отслеживается</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>Создана ветка, её изменения включены в <code>main</code>, переходы между страницами работают</td>
+<td align="right">2</td>
+</tr>
+</tbody></table></div>
+<p>Работа завершена, когда репозиторий можно открыть на проверке, а студент объясняет, что сохранял на каждом этапе. Отдельный коммит слияния и GitHub для получения 10 баллов не нужны.</p>
+<h2>Вопросы для защиты</h2>
+<ol>
+<li>Можно ли сделать коммит без интернета?</li>
+<li>Почему одного <code>Ctrl+S</code> недостаточно для записи в историю Git?</li>
+<li>Что попадёт в коммит, если после <code>add</code> ещё раз поменять файл?</li>
+<li>Чем отличаются <code>git diff</code> и <code>git diff --staged</code>?</li>
+<li>Почему <code>restore --staged</code> не удалил текст README?</li>
+<li>Что было потеряно после <code>git restore index.html</code> в шаге 7?</li>
+<li>Почему <code>.gitignore</code> добавили в коммит, а заметку — нет?</li>
+<li>Почему <code>about.html</code> исчезал и возвращался при работе с ветками?</li>
+<li>Почему при слиянии в этом опыте не появился отдельный коммит?</li>
+<li>Что нужно передать вместе со страницами, чтобы сохранить историю проекта?</li>
+</ol>
+        </main>
+    </body>
+</html>
